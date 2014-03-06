@@ -134,7 +134,7 @@ if CFG_DEVEL_SITE:
                     run_sql("DELETE FROM userEXT WHERE id_user=%s", (uid[0][0], ))
                 for method_name in self.robot_login_methods:
                     for group in self.some_groups:
-                        run_sql("DELETE FROM usergroup WHERE name=%s", ("%s [%s]" % (group, method_name), ))
+                        run_sql("DELETE FROM usergroup WHERE name=%s", ("%s [%s]" % (group, method_name), )) # kwalitee: disable=sql
             for nickname in (self.a_nickname, self.another_nickname):
                 run_sql("DELETE FROM userEXT WHERE id=%s", (nickname, ))
 
@@ -254,15 +254,15 @@ if CFG_DEVEL_SITE:
                     if error_messages:
                         self.fail(merge_error_messages(error_messages))
                     id_user = run_sql("SELECT id FROM user WHERE email=%s", (self.a_email, ))[0][0]
-                    self.failUnless(run_sql("SELECT * FROM userEXT WHERE id=%s AND id_user=%s AND method=%s", (self.a_nickname, id_user, method_name)), "Can't find id %s for user %s with metod %s. userEXT contains: %s" % (self.a_nickname, id_user, method_name, run_sql("SELECT * FROM userEXT")))
+                    self.failUnless(run_sql("SELECT * FROM userEXT WHERE id=%s AND id_user=%s AND method=%s", (self.a_nickname, id_user, method_name)), "Can't find id %s for user %s with metod %s. userEXT contains: %s" % (self.a_nickname, id_user, method_name, run_sql("SELECT * FROM userEXT"))) # kwalitee: disable=sql
                     error_messages = test_web_page_content(url2, expected_text=self.a_nickname)
                     if error_messages:
                         self.fail(merge_error_messages(error_messages))
                     id_user2 = run_sql("SELECT id FROM user WHERE email=%s", (self.another_email, ))[0][0]
                     self.assertEqual(id_user, id_user2)
-                    self.failUnless(run_sql("SELECT * FROM userEXT WHERE id=%s AND id_user=%s AND method=%s", (self.a_nickname, id_user2, method_name)))
+                    self.failUnless(run_sql("SELECT * FROM userEXT WHERE id=%s AND id_user=%s AND method=%s", (self.a_nickname, id_user2, method_name)))  # kwalitee: disable=sql
                     ## The old email should not exist any longer.
-                    self.failIf(run_sql("SELECT * FROM user WHERE email=%s", (self.a_email, )))
+                    self.failIf(run_sql("SELECT * FROM user WHERE email=%s", (self.a_email, ))) # kwalitee: disable=sql
                 finally:
                     self._erase_example_user_and_groups()
 
@@ -277,26 +277,26 @@ if CFG_DEVEL_SITE:
                     if error_messages:
                         self.fail(merge_error_messages(error_messages))
                     id_user = run_sql("SELECT id FROM user WHERE email=%s", (self.a_email, ))[0][0]
-                    self.failUnless(run_sql("SELECT * FROM userEXT WHERE id=%s AND id_user=%s AND method=%s", (self.a_nickname, id_user, method_name)))
+                    self.failUnless(run_sql("SELECT * FROM userEXT WHERE id=%s AND id_user=%s AND method=%s", (self.a_nickname, id_user, method_name)))  # kwalitee: disable=sql
                     error_messages = test_web_page_content(url2, expected_text=self.another_nickname)
                     if error_messages:
                         self.fail(merge_error_messages(error_messages))
                     id_user2 = run_sql("SELECT id FROM user WHERE email=%s", (self.another_email, ))[0][0]
                     self.failIfEqual(id_user, id_user2)
-                    self.failUnless(run_sql("SELECT * FROM userEXT WHERE id=%s AND id_user=%s AND method=%s", (self.another_nickname, id_user2, method_name)), "Can't find id %s for user %s with metod %s. userEXT contains: %s" % (self.another_nickname, id_user2, method_name, run_sql("SELECT * FROM userEXT")))
+                    self.failUnless(run_sql("SELECT * FROM userEXT WHERE id=%s AND id_user=%s AND method=%s", (self.another_nickname, id_user2, method_name)), "Can't find id %s for user %s with metod %s. userEXT contains: %s" % (self.another_nickname, id_user2, method_name, run_sql("SELECT * FROM userEXT")))   # kwalitee: disable=sql
                     ## The first email should still exists
-                    self.failUnless(run_sql("SELECT * FROM user WHERE email=%s", (self.a_email, )))
+                    self.failUnless(run_sql("SELECT * FROM user WHERE email=%s", (self.a_email, ))) # kwalitee: disable=sql
                     ## We log in with the 1st email but with the second nickname.
                     ## That means the 1st user should be merged into the second.
                     error_messages = test_web_page_content(url3, expected_text=self.another_nickname)
                     if error_messages:
                         self.fail(merge_error_messages(error_messages))
                     ## The another_email should not exist any longer.
-                    self.failIf(run_sql("SELECT * FROM user WHERE email=%s", (self.another_email, )), "%s still exists! while it should have been merged into %s: %s, userEXT contains: %s" % (self.another_email, self.a_email, run_sql("SELECT * FROM user WHERE email=%s", (self.another_email, )), run_sql("SELECT * FROM userEXT")))
+                    self.failIf(run_sql("SELECT * FROM user WHERE email=%s", (self.another_email, )), "%s still exists! while it should have been merged into %s: %s, userEXT contains: %s" % (self.another_email, self.a_email, run_sql("SELECT * FROM user WHERE email=%s", (self.another_email, )), run_sql("SELECT * FROM userEXT")))    # kwalitee: disable=sql
                     ## And the corresponding user should not exist anymore as it has been
                     ## merged into id_user
-                    self.failIf(run_sql("SELECT * FROM user WHERE id=%s", (id_user2, )))
-                    self.failUnless(run_sql("SELECT * FROM user WHERE id=%s AND email=%s", (id_user, self.a_email)))
+                    self.failIf(run_sql("SELECT * FROM user WHERE id=%s", (id_user2, ))) # kwalitee: disable=sql
+                    self.failUnless(run_sql("SELECT * FROM user WHERE id=%s AND email=%s", (id_user, self.a_email)))    # kwalitee: disable=sql
                 finally:
                     self._erase_example_user_and_groups()
 

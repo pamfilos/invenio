@@ -196,9 +196,9 @@ def selectCplxDoctype(ln = CFG_SITE_LANG):
 
 def selectCateg(doctype, ln = CFG_SITE_LANG):
     t = ""
-    res = run_sql("select ldocname from sbmDOCTYPE where sdocname=%s",(doctype,))
+    res = run_sql("select ldocname from sbmDOCTYPE where sdocname=%s",(real_escape_string(doctype),))   # kwalitee: disable=sql
     title = res[0][0]
-    sth = run_sql("select * from sbmCATEGORIES where doctype=%s order by lname",(doctype,))
+    sth = run_sql("select * from sbmCATEGORIES where doctype=%s order by lname",(real_escape_string(doctype),)) # kwalitee: disable=sql
     if len(sth) == 0:
         categ = "unknown"
         return selectDocument(doctype, categ, ln=ln)
@@ -231,9 +231,9 @@ def selectCateg(doctype, ln = CFG_SITE_LANG):
 
 def selectCplxCateg(doctype, ln=CFG_SITE_LANG):
     t = ""
-    res = run_sql("SELECT ldocname FROM sbmDOCTYPE WHERE sdocname=%s", (doctype,))
+    res = run_sql("SELECT ldocname FROM sbmDOCTYPE WHERE sdocname=%s", (real_escape_string(doctype),))  # kwalitee: disable=sql
     title = res[0][0]
-    sth = run_sql("SELECT * FROM sbmCATEGORIES WHERE doctype=%s ORDER BY lname", (doctype,))
+    sth = run_sql("SELECT * FROM sbmCATEGORIES WHERE doctype=%s ORDER BY lname", (real_escape_string(doctype),))    # kwalitee: disable=sql
     if len(sth) == 0:
         categ = "unknown"
         return selectCplxDocument(doctype, categ, "", ln=ln)
@@ -1761,9 +1761,9 @@ def sendMailToGroup(doctype, categ, RN, group_id, authors):
            str(CFG_SITE_URL + "/publiline.py?flow=cplx&doctype="+doctype+"&ln=en&apptype=RRP&categ="+categ+"&RN="+RN))
 
     # send mails to all members of the ATLAS group
-    group_member_ids = run_sql("SELECT id_user FROM user_usergroup WHERE id_usergroup = '%s'" % (group_id))
+    group_member_ids = run_sql("SELECT id_user FROM user_usergroup WHERE id_usergroup = %s", (real_escape_string(group_id),)) # kwalitee: disable=sql
     for member_id in group_member_ids:
-        member_email = run_sql("SELECT email FROM user WHERE id = '%s'" % (member_id))
+        member_email = run_sql("SELECT email FROM user WHERE id = %s", (member_id,))  # kwalitee: disable=sql
         if not member_email[0][0] == "info@invenio-software.org":
             send_email(FROMADDR, member_email[0][0],"Request for comment on document %s" % (RN), message)
     return ""

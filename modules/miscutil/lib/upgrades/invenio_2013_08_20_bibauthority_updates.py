@@ -224,39 +224,39 @@ def do_upgrade_atlantis():
                  PRIMARY KEY (id_bibrec,type)
                ) ENGINE=MyISAM;""")
     #second step: fill tables with data
-    run_sql("""INSERT INTO field VALUES (33,'authority author','authorityauthor')""")
-    run_sql("""INSERT INTO field VALUES (34,'authority institute','authorityinstitute')""")
-    run_sql("""INSERT INTO field VALUES (35,'authority journal','authorityjournal')""")
-    run_sql("""INSERT INTO field VALUES (36,'authority subject','authoritysubject')""")
-    run_sql("""INSERT INTO field_tag VALUES (33,1,100)""")
-    run_sql("""INSERT INTO field_tag VALUES (33,146,100)""")
-    run_sql("""INSERT INTO field_tag VALUES (33,140,100)""")
-    run_sql("""INSERT INTO field_tag VALUES (34,148,100)""")
-    run_sql("""INSERT INTO field_tag VALUES (34,149,100)""")
-    run_sql("""INSERT INTO field_tag VALUES (34,150,100)""")
-    run_sql("""INSERT INTO field_tag VALUES (35,151,100)""")
-    run_sql("""INSERT INTO field_tag VALUES (35,152,100)""")
-    run_sql("""INSERT INTO field_tag VALUES (35,153,100)""")
-    run_sql("""INSERT INTO field_tag VALUES (36,154,100)""")
-    run_sql("""INSERT INTO field_tag VALUES (36,155,100)""")
-    run_sql("""INSERT INTO field_tag VALUES (36,156,100)""")
-    run_sql("""INSERT INTO tag VALUES (145,'authority: main personal name','100__a')""")
-    run_sql("""INSERT INTO tag VALUES (146,'authority: alternative personal name','400__a')""")
-    run_sql("""INSERT INTO tag VALUES (147,'authority: personal name from other record','500__a')""")
-    run_sql("""INSERT INTO tag VALUES (148,'authority: organization main name','110__a')""")
-    run_sql("""INSERT INTO tag VALUES (149,'organization alternative name','410__a')""")
-    run_sql("""INSERT INTO tag VALUES (150,'organization main from other record','510__a')""")
-    run_sql("""INSERT INTO tag VALUES (151,'authority: uniform title','130__a')""")
-    run_sql("""INSERT INTO tag VALUES (152,'authority: uniform title alternatives','430__a')""")
-    run_sql("""INSERT INTO tag VALUES (153,'authority: uniform title from other record','530__a')""")
-    run_sql("""INSERT INTO tag VALUES (154,'authority: subject from other record','150__a')""")
-    run_sql("""INSERT INTO tag VALUES (155,'authority: subject alternative name','450__a')""")
-    run_sql("""INSERT INTO tag VALUES (156,'authority: subject main name','550__a')""")
+    run_sql("""INSERT INTO field VALUES (33,'authority author','authorityauthor')""")   # kwalitee: disable=sql
+    run_sql("""INSERT INTO field VALUES (34,'authority institute','authorityinstitute')""")   # kwalitee: disable=sql
+    run_sql("""INSERT INTO field VALUES (35,'authority journal','authorityjournal')""")   # kwalitee: disable=sql
+    run_sql("""INSERT INTO field VALUES (36,'authority subject','authoritysubject')""")   # kwalitee: disable=sql
+    run_sql("""INSERT INTO field_tag VALUES (33,1,100)""")   # kwalitee: disable=sql
+    run_sql("""INSERT INTO field_tag VALUES (33,146,100)""")   # kwalitee: disable=sql
+    run_sql("""INSERT INTO field_tag VALUES (33,140,100)""")   # kwalitee: disable=sql
+    run_sql("""INSERT INTO field_tag VALUES (34,148,100)""")   # kwalitee: disable=sql
+    run_sql("""INSERT INTO field_tag VALUES (34,149,100)""")   # kwalitee: disable=sql
+    run_sql("""INSERT INTO field_tag VALUES (34,150,100)""")   # kwalitee: disable=sql
+    run_sql("""INSERT INTO field_tag VALUES (35,151,100)""")   # kwalitee: disable=sql
+    run_sql("""INSERT INTO field_tag VALUES (35,152,100)""")   # kwalitee: disable=sql
+    run_sql("""INSERT INTO field_tag VALUES (35,153,100)""")   # kwalitee: disable=sql
+    run_sql("""INSERT INTO field_tag VALUES (36,154,100)""")   # kwalitee: disable=sql
+    run_sql("""INSERT INTO field_tag VALUES (36,155,100)""")   # kwalitee: disable=sql
+    run_sql("""INSERT INTO field_tag VALUES (36,156,100)""")   # kwalitee: disable=sql
+    run_sql("""INSERT INTO tag VALUES (145,'authority: main personal name','100__a')""")   # kwalitee: disable=sql
+    run_sql("""INSERT INTO tag VALUES (146,'authority: alternative personal name','400__a')""")   # kwalitee: disable=sql
+    run_sql("""INSERT INTO tag VALUES (147,'authority: personal name from other record','500__a')""")   # kwalitee: disable=sql
+    run_sql("""INSERT INTO tag VALUES (148,'authority: organization main name','110__a')""")   # kwalitee: disable=sql
+    run_sql("""INSERT INTO tag VALUES (149,'organization alternative name','410__a')""")   # kwalitee: disable=sql
+    run_sql("""INSERT INTO tag VALUES (150,'organization main from other record','510__a')""")   # kwalitee: disable=sql
+    run_sql("""INSERT INTO tag VALUES (151,'authority: uniform title','130__a')""")   # kwalitee: disable=sql
+    run_sql("""INSERT INTO tag VALUES (152,'authority: uniform title alternatives','430__a')""")   # kwalitee: disable=sql
+    run_sql("""INSERT INTO tag VALUES (153,'authority: uniform title from other record','530__a')""")   # kwalitee: disable=sql
+    run_sql("""INSERT INTO tag VALUES (154,'authority: subject from other record','150__a')""")   # kwalitee: disable=sql
+    run_sql("""INSERT INTO tag VALUES (155,'authority: subject alternative name','450__a')""")   # kwalitee: disable=sql
+    run_sql("""INSERT INTO tag VALUES (156,'authority: subject main name','550__a')""")   # kwalitee: disable=sql
 
-    run_sql("""INSERT INTO idxINDEX VALUES (20,'authorityauthor','This index contains words/phrases from author authority records.','0000-00-00 00:00:00', '', 'native', '','No','No','No', 'BibIndexAuthorTokenizer')""")
-    run_sql("""INSERT INTO idxINDEX VALUES (21,'authorityinstitute','This index contains words/phrases from institute authority records.','0000-00-00 00:00:00', '', 'native', '','No','No','No', 'BibIndexDefaultTokenizer')""")
-    run_sql("""INSERT INTO idxINDEX VALUES (22,'authorityjournal','This index contains words/phrases from journal authority records.','0000-00-00 00:00:00', '', 'native', '','No','No','No', 'BibIndexDefaultTokenizer')""")
-    run_sql("""INSERT INTO idxINDEX VALUES (23,'authoritysubject','This index contains words/phrases from subject authority records.','0000-00-00 00:00:00', '', 'native', '','No','No','No', 'BibIndexDefaultTokenizer')""")
+    run_sql("""INSERT INTO idxINDEX VALUES (20,'authorityauthor','This index contains words/phrases from author authority records.','0000-00-00 00:00:00', '', 'native', '','No','No','No', 'BibIndexAuthorTokenizer')""")   # kwalitee: disable=sql
+    run_sql("""INSERT INTO idxINDEX VALUES (21,'authorityinstitute','This index contains words/phrases from institute authority records.','0000-00-00 00:00:00', '', 'native', '','No','No','No', 'BibIndexDefaultTokenizer')""")   # kwalitee: disable=sql
+    run_sql("""INSERT INTO idxINDEX VALUES (22,'authorityjournal','This index contains words/phrases from journal authority records.','0000-00-00 00:00:00', '', 'native', '','No','No','No', 'BibIndexDefaultTokenizer')""")   # kwalitee: disable=sql
+    run_sql("""INSERT INTO idxINDEX VALUES (23,'authoritysubject','This index contains words/phrases from subject authority records.','0000-00-00 00:00:00', '', 'native', '','No','No','No', 'BibIndexDefaultTokenizer')""")   # kwalitee: disable=sql
 
     run_sql("""INSERT INTO idxINDEX_field (id_idxINDEX, id_field) VALUES (20,33)""")
     run_sql("""INSERT INTO idxINDEX_field (id_idxINDEX, id_field) VALUES (21,34)""")

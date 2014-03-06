@@ -145,7 +145,7 @@ def dict2db(table_name, dict_data, mode):
                                                             query_values)
     elif mode == 'c': #Correct mode
         if '_' in table_name:
-            query = "SELECT * FROM %s" % table_name#FIXIT Trick to execute something instead of giving error
+            query = "SELECT * FROM %s" % wash_table_column_name(table_name)  #FIXIT Trick to execute something instead of giving error   # kwalitee: disable=sql
         else:
             tbl_id = get_primary_keys(table_name)[0]
             del dict_data[tbl_id]
@@ -269,7 +269,7 @@ def add_special_field(collection, tbl_name , dict_data):
     template_key = Template(template_key.strip())
     template_value = Template(template_value.strip())
     id_field = dict_data['id']
-    query = "SELECT * FROM %s WHERE %s=%s" % ("fieldname", "id_field", id_field)
+    query = "SELECT * FROM %s WHERE %s=%s" % ("fieldname", "id_field", real_escape_string(id_field))    # kwalitee: disable=sql
     result = query2list(query, "fieldname")
     if result:
         for res in result:
@@ -285,12 +285,12 @@ def dump_collection(collection, config, force_ids, print_to_screen=False):
     fin(final): tag
     """
     tbl_ori, tbl_rel, tbl_fin = collection['relations'].split("-")
-    query = "SELECT * FROM %s" % (wash_table_column_name(tbl_ori))
+    query = "SELECT * FROM %s" % (wash_table_column_name(tbl_ori))  # kwalitee: disable=sql
     lst_ori = query2list(query, tbl_ori)
     tbl_ori_id = get_primary_keys(tbl_ori)[0]
     for index_ori, result_ori in enumerate(lst_ori):
         dict_rels = get_relationship(collection, tbl_ori, tbl_ori_id)
-        query = "SELECT * FROM %s WHERE %s=%s" % (wash_table_column_name(tbl_rel),
+        query = "SELECT * FROM %s WHERE %%s=%%s" % wash_table_column_name(tbl_rel),(  # kwalitee: disable=sql
                                                  dict_rels[tbl_ori+"."+tbl_ori_id],
                                                  result_ori[tbl_ori_id])
         if collection['tables'][tbl_ori].startswith('extend'):
@@ -299,7 +299,7 @@ def dump_collection(collection, config, force_ids, print_to_screen=False):
         for result_rel in lst_rel:
             tbl_fin_id = get_primary_keys(tbl_fin)[0]
             tbl_rel_id = dict_rels[tbl_fin+"."+tbl_fin_id].split(".")[1].strip()
-            query = "SELECT * FROM %s WHERE %s=%s" % (wash_table_column_name(tbl_fin),
+            query = "SELECT * FROM %s WHERE %%s=%%s" % wash_table_column_name(tbl_fin),(  # kwalitee: disable=sql
                                                      tbl_fin_id, result_rel[tbl_rel_id])
             lst_fin = query2list(query, tbl_fin)
             for index_fin, result_fin in enumerate(lst_fin):

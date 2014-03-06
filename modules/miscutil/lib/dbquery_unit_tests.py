@@ -66,11 +66,11 @@ class TableUpdateTimesTest(InvenioTestCase):
         # get_table_update_time()
         # create empty test table
         test_table = "tmpTESTTABLE123"
-        dbquery.run_sql("CREATE TABLE IF NOT EXISTS %s (a INT)" % test_table)
+        dbquery.run_sql("CREATE TABLE IF NOT EXISTS %s (a INT)" %( dbquery.wash_table_column_name(test_table),))
         # run the test:
         self._check_table_update_time(test_table)
         # drop empty test table
-        dbquery.run_sql("DROP TABLE %s" % test_table)
+        dbquery.run_sql("DROP TABLE %s"% (dbquery.wash_table_column_name(test_table),))
 
     def test_utf8_python_mysqldb_mysql_storage_chain(self):
         """dbquery - UTF-8 in Python<->MySQLdb<->MySQL storage chain"""

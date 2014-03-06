@@ -28,7 +28,7 @@ def info():
 
 def do_upgrade():
     """ Implement your upgrades here  """
-    present = run_sql("select * from format where code='wapdat'")
+    present = run_sql("select * from format where code='wapdat'")   # kwalitee: disable=sql
     if not present:
         run_sql("INSERT INTO format (name,code,description,content_type,visibility) VALUES ('WebAuthorProfile data helper','wapdat', 'cPickled dicts', 'text', 0)")
 

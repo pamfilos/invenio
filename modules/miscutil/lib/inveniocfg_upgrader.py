@@ -535,7 +535,7 @@ class InvenioUpgrader(object):
         stmt = "SELECT upgrade FROM upgrade WHERE upgrade LIKE %s " \
             "ORDER BY applied DESC LIMIT 1"
         try:
-            res = run_sql(stmt, param=["%s_%%" % repository])
+            res = run_sql(stmt, param=["%s_%%" % real_escape_string(repository)])   # kwalitee: disable=sql
             if res:
                 return res[0][0]
         except Exception, e:

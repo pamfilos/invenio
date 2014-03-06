@@ -490,7 +490,7 @@ def check_quota(nb_messages):
                GROUP BY id_user_to
                HAVING count(id_user_to)>%%s"""
     query_params.append(nb_messages)
-    res = run_sql(query % where, tuple(query_params))
+    res = run_sql(query % where, tuple(query_params))   # kwalitee: disable=sql
     user_over_quota = {}
     def enter_dict(couple):
         """ enter a tuple in user_over_quota dict """

@@ -83,8 +83,8 @@ def do_upgrade_atlantis():
               PRIMARY KEY (id_bibrec,type)
             ) ENGINE=MyISAM;
             """)
-    run_sql("""INSERT INTO idxINDEX VALUES (25,'filetype','This index contains file extensions of the record.', '0000-00-00 00:00:00', '', 'native', '', 'No', 'No', 'No', 'BibIndexFiletypeTokenizer')""")
-    run_sql("""INSERT INTO field VALUES (38,'file type', 'filetype')""")
+    run_sql("""INSERT INTO idxINDEX VALUES (25,'filetype','This index contains file extensions of the record.', '0000-00-00 00:00:00', '', 'native', '', 'No', 'No', 'No', 'BibIndexFiletypeTokenizer')""")   # kwalitee: disable=sql
+    run_sql("""INSERT INTO field VALUES (38,'file type', 'filetype')""")   # kwalitee: disable=sql
     run_sql("""INSERT INTO idxINDEX_field (id_idxINDEX, id_field) VALUES (25,38)""")
 
 def estimate():

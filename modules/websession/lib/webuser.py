@@ -542,7 +542,7 @@ def merge_usera_into_userb(id_usera, id_userb):
         ## until we will move to InnoDB and we will have
         ## real transitions
         #for table, dummy in CFG_WEBUSER_USER_TABLES:
-            #run_sql("LOCK TABLE %s WRITE" % table)
+            #run_sql("LOCK TABLE %s WRITE" % table) # kwalitee: disable=sql
 
         ## Special treatment for BibAuthorID
         from invenio.bibauthorid_dbinterface import webuser_merge_user
@@ -551,7 +551,7 @@ def merge_usera_into_userb(id_usera, id_userb):
         table = ''
         try:
             for index, (table, column) in enumerate(CFG_WEBUSER_USER_TABLES):
-                run_sql("UPDATE %(table)s SET %(column)s=%%s WHERE %(column)s=%%s; DELETE FROM %(table)s WHERE %(column)s=%%s;" % {
+                run_sql("UPDATE %(table)s SET %(column)s=%%s WHERE %(column)s=%%s; DELETE FROM %(table)s WHERE %(column)s=%%s;" % { # kwalitee: disable=sql
                     'table': table,
                     'column': column
                 }, (id_userb, id_usera, id_usera))
@@ -609,7 +609,7 @@ def loginUser(req, p_un, p_pw, login_method):
                 generate_string = lambda: reduce((lambda x, y: x+y), [random.choice("qwertyuiopasdfghjklzxcvbnm1234567890") for i in range(32)])
                 random_string = generate_string()
                 p_email = CFG_TEMP_EMAIL_ADDRESS % random_string
-                while run_sql("SELECT * FROM user WHERE email=%s", (p_email,)):
+                while run_sql("SELECT * FROM user WHERE email=%s", (p_email,)): # kwalitee: disable=sql
                     random_string = generate_string()
                     p_email = CFG_TEMP_EMAIL_ADDRESS % random_string
 

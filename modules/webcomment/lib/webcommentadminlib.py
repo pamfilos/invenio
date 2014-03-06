@@ -382,7 +382,7 @@ def query_get_comments(uid, cmtID, recID, reviews, ln, abuse=False, user_collect
     if abuse:
         where_clause += ' AND c.nb_abuse_reports>0'
 
-    res = run_sql(query % (select_fields, where_clause))
+    res = run_sql(query , (select_fields, where_clause))
     collection_records = []
     if collection == 'Show all':
         for collection_name in user_collections:
@@ -444,7 +444,7 @@ def query_get_hot(comments, ln, top, user_collections, collection):
     """
     where_clause = "WHERE " + (comments and 'c.star_score=0' or 'c.star_score>0') + ' AND c.status="ok" AND c.nb_abuse_reports < %s' % CFG_WEBCOMMENT_NB_REPORTS_BEFORE_SEND_EMAIL_TO_ADMIN
 
-    res = run_sql(query % (where_clause, top))
+    res = run_sql(query , (where_clause, top))
 
     collection_records = []
     if collection == 'Show all':
@@ -491,7 +491,7 @@ def query_get_latest(comments, ln, top, user_collections, collection):
     select_fields = not comments and 'c.star_score, ' or ''
     where_clause = "WHERE " + (comments and 'c.star_score=0' or 'c.star_score>0') + ' AND c.status="ok" AND c.nb_abuse_reports < %s' % CFG_WEBCOMMENT_NB_REPORTS_BEFORE_SEND_EMAIL_TO_ADMIN
 
-    res = run_sql(query % (select_fields, where_clause, top))
+    res = run_sql(query , (select_fields, where_clause, top))
 
     collection_records = []
     if collection == 'Show all':

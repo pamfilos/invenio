@@ -69,11 +69,11 @@ def backup_tables(drop=False):
         run_sql('DROP TABLE bibdoc_bibdoc_backup')
     try:
         run_sql("""CREATE TABLE bibrec_bibdoc_backup (KEY id_bibrec(id_bibrec),
-                KEY id_bibdoc(id_bibdoc)) SELECT * FROM bibrec_bibdoc""")
+                KEY id_bibdoc(id_bibdoc)) SELECT * FROM bibrec_bibdoc""")   # kwalitee: disable=sql
         run_sql("""CREATE TABLE bibdoc_backup (PRIMARY KEY id(id))
-                SELECT * FROM bibdoc""")
+                SELECT * FROM bibdoc""")    # kwalitee: disable=sql
         run_sql("""CREATE TABLE bibdoc_bibdoc_backup (KEY id_bibdoc1(id_bibdoc1),
-                KEY id_bibdoc2(id_bibdoc2)) SELECT * FROM bibdoc_bibdoc""")
+                KEY id_bibdoc2(id_bibdoc2)) SELECT * FROM bibdoc_bibdoc""") # kwalitee: disable=sql
     except OperationalError, e:
         if not drop:
             return False

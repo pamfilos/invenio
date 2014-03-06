@@ -397,7 +397,7 @@ def perform_modifydbquery(colID, ln, dbquery='', callback='yes', confirm=-1):
         subtitle = """<a name="1">1. Modify collection query for collection '%s'</a>&nbsp;&nbsp;&nbsp;<small>[<a title="See guide" href="%s/help/admin/websearch-admin-guide#3.1">?</a>]</small>""" % (col_dict[colID], CFG_SITE_URL)
 
         if confirm == -1:
-            res = run_sql("SELECT dbquery FROM collection WHERE id=%s" % colID)
+            res = run_sql("SELECT dbquery FROM collection WHERE id=%s" , (colID,))
             dbquery = res[0][0]
         if not dbquery:
             dbquery = ''
@@ -1817,7 +1817,7 @@ def perform_update_detailed_record_options(colID, ln, tabs, recurse):
 
     update_settings(colID, tabs, recurse)
 ##     for colID in colIDs:
-##         run_sql("DELETE FROM collectiondetailedrecordpagetabs WHERE id_collection='%s'" % colID)
+##         run_sql("DELETE FROM collectiondetailedrecordpagetabs WHERE id_collection='%s'" % colID) # kwalitee: disable=sql
 ##         for enabled_tab in tabs:
 ##             run_sql("REPLACE INTO collectiondetailedrecordpagetabs" + \
 ##                 " SET id_collection='%s', tabs='%s'" % (colID, ';'.join(tabs)))
@@ -3247,7 +3247,7 @@ def add_col_pbx(colID, pbxID, ln, position, score=''):
 
     try:
         if score:
-            res = run_sql("INSERT INTO collection_portalbox(id_portalbox, id_collection, ln, score, position) values (%s,%s,'%s',%s,%s)", (pbxID, colID, ln, score, position))
+            res = run_sql("INSERT INTO collection_portalbox(id_portalbox, id_collection, ln, score, position) values (%s,%s,'%s',%s,%s)", (real_escape_string(pbxID), real_escape_string(colID), real_escape_string(ln), real_escape_string(score), real_escape_string(position)))  # kwalitee: disable=sql
         else:
             res = run_sql("SELECT score FROM collection_portalbox WHERE id_collection=%s and ln=%s and position=%s ORDER BY score desc, ln, position", (colID, ln, position))
             if res:
@@ -3422,12 +3422,12 @@ def switch_score(colID, id_1, id_2, table):
     table - name of the table"""
 
     try:
-        res1 = run_sql("SELECT score FROM collection_%s WHERE id_collection=%%s and id_%s=%%s" % (table, table), (colID, id_1))
-        res2 = run_sql("SELECT score FROM collection_%s WHERE id_collection=%%s and id_%s=%%s" % (table, table), (colID, id_2))
+        res1 = run_sql("SELECT score FROM collection_%s WHERE id_collection=%%s and id_%s=%%s"% (wash_table_column_name(table), wash_table_column_name(table)), (colID, id_1))
+        res2 = run_sql("SELECT score FROM collection_%s WHERE id_collection=%%s and id_%s=%%s"% (wash_table_column_name(table), wash_table_column_name(table)), (colID, id_2))
         if res1[0][0] == res2[0][0]:
             return (0, (1, "Cannot rearrange the selected fields, either rearrange by name or use the mySQL client to fix the problem."))
-        res = run_sql("UPDATE collection_%s SET score=%%s WHERE id_collection=%%s and id_%s=%%s" % (table, table), (res2[0][0], colID, id_1))
-        res = run_sql("UPDATE collection_%s SET score=%%s WHERE id_collection=%%s and id_%s=%%s" % (table, table), (res1[0][0], colID, id_2))
+        res = run_sql("UPDATE collection_%s SET score=%%s WHERE id_collection=%%s and id_%s=%%s"% (wash_table_column_name(table), wash_table_column_name(table)), (res2[0][0], colID, id_1))
+        res = run_sql("UPDATE collection_%s SET score=%%s WHERE id_collection=%%s and id_%s=%%s"% (wash_table_column_name(table), wash_table_column_name(table)), (res1[0][0], colID, id_2))
         return (1, "")
     except Exception, e:
         register_exception()

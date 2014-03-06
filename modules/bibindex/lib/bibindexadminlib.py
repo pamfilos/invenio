@@ -2532,9 +2532,9 @@ def create_queue_tables(index_id):
             INDEX (index_name),
             INDEX (runtime)
         ) ENGINE=MyISAM;"""
-    run_sql(query % ("WORD", int(index_id)))
-    run_sql(query % ("PAIR", int(index_id)))
-    run_sql(query % ("PHRASE", int(index_id)))
+    run_sql(query % ("WORD", int(index_id))) # kwalitee: disable=sql
+    run_sql(query % ("PAIR", int(index_id))) # kwalitee: disable=sql
+    run_sql(query % ("PHRASE", int(index_id))) # kwalitee: disable=sql
 
 
 def drop_queue_tables(index_id):
@@ -2543,9 +2543,9 @@ def drop_queue_tables(index_id):
         @param index_id: id of the index we want to drop tables for
     """
     query = """DROP TABLE IF EXISTS idx%s%02dQ"""
-    run_sql(query % ("WORD", int(index_id)))
-    run_sql(query % ("PAIR", int(index_id)))
-    run_sql(query % ("PHRASE", int(index_id)))
+    run_sql(query % ("WORD", int(index_id))) # kwalitee: disable=sql
+    run_sql(query % ("PAIR", int(index_id))) # kwalitee: disable=sql
+    run_sql(query % ("PHRASE", int(index_id))) # kwalitee: disable=sql
 
 
 def add_virtual_idx(id_virtual, id_normal):

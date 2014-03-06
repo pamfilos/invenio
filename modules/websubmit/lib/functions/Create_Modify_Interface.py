@@ -247,7 +247,7 @@ def Create_Modify_Interface(parameters, curdir, form, user_info=None):
         if date_conversion_setting != 'none':
             # If field is a date value, transform date into format DD/MM/YYYY:
             value = Create_Modify_Interface_transform_date(value)
-        res = run_sql("SELECT * FROM sbmFIELDDESC WHERE name=%s", (field,))
+        res = run_sql("SELECT * FROM sbmFIELDDESC WHERE name=%s", (field,)) # kwalitee: disable=sql
         if len(res) > 0:
             element_type = res[0][3]
             numcols = res[0][6]

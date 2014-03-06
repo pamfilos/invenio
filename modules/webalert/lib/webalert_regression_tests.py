@@ -97,8 +97,8 @@ class WebAlertFilteringRestrictedRecords(InvenioTestCase):
         for params in parameters.values():
             row_id = run_sql(q_query, params['query_params'])
             self.added_query_ids.append(row_id)
-            run_sql(q_user_query % {'id_query': row_id}, params['user_query_params'])
-            run_sql(q_user_query_basket % {'id_query': row_id}, params['user_query_basket_params'])
+            run_sql(q_user_query % {'id_query': row_id}, params['user_query_params'])   # kwalitee: disable=sql
+            run_sql(q_user_query_basket % {'id_query': row_id}, params['user_query_basket_params']) # kwalitee: disable=sql
 
         # Run the alert for a date when we expect some result, and
         # record output for later analysis.

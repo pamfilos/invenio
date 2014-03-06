@@ -115,7 +115,7 @@ def displayRefereesPage(doctype, warningText):
         doctype = '*'
         docname = "all catalogues"
     else:
-        res = run_sql("SELECT * FROM sbmDOCTYPE WHERE sdocname=%s", (doctype,))
+        res = run_sql("SELECT * FROM sbmDOCTYPE WHERE sdocname=%s", (real_escape_string(doctype),)) # kwalitee: disable=sql
         docname = res[0][0]
     t += warningText
     t += """

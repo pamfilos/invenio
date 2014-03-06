@@ -19,7 +19,7 @@
 
 __revision__ = "$Id$"
 
-from invenio.dbquery import run_sql
+from invenio.dbquery import run_sql, real_escape_string
 from invenio.websubmitadmin_config import *
 from random import randint
 
@@ -2694,7 +2694,7 @@ def insert_submission_details_clonefrom_submission(addtodoctype, action, clonefr
         q = """INSERT INTO sbmIMPLEMENT (docname, actname, displayed, subname, nbpg, cd, md, buttonorder, statustext, level, """ \
             """score, stpage, endtxt) (SELECT %s, %s, displayed, %s, nbpg, CURDATE(), CURDATE(), IFNULL(buttonorder, 100), statustext, level, """ \
             """score, stpage, endtxt FROM sbmIMPLEMENT WHERE docname=%s AND actname=%s LIMIT 1)"""
-        run_sql(q, (addtodoctype, action, "%s%s" % (action, addtodoctype), clonefromdoctype, action))
+        run_sql(q, (real_escape_string(addtodoctype), action, "%s%s" % (action, addtodoctype), real_escape_string(clonefromdoctype), action)) # kwalitee: disable=sql
         return 0 ## cloning executed - everything OK
     else:
         ## submission already exists for "addtodoctype" - cannot insert it again!
@@ -2775,7 +2775,7 @@ def get_numberfields_submissionpage_doctype_action(doctype, action, pagenum):
        @return: (integer) the number of fields found on the page
     """
     q = """SELECT COUNT(subname) FROM sbmFIELD WHERE pagenb=%s AND subname=%s"""
-    return int(run_sql(q, (pagenum, """%s%s""" % (action, doctype)))[0][0])
+    return int(run_sql(q, (real_escape_string(pagenum), """%s%s""" % (action, doctype)))[0][0]) # kwalitee: disable=sql
 
 def get_number_of_fields_on_submissionpage_at_positionx(doctype, action, pagenum, positionx):
     """Return the number of fields at positionx on a given page of a given submission.
@@ -2785,7 +2785,7 @@ def get_number_of_fields_on_submissionpage_at_positionx(doctype, action, pagenum
        @return: (integer) the number of fields found on the page
     """
     q = """SELECT COUNT(subname) FROM sbmFIELD WHERE pagenb=%s AND subname=%s AND fieldnb=%s"""
-    return int(run_sql(q, (pagenum, """%s%s""" % (action, doctype), positionx))[0][0])
+    return int(run_sql(q, (real_escape_string(pagenum), """%s%s""" % (action, doctype), real_escape_string(positionx)))[0][0]) # kwalitee: disable=sql
 
 def swap_elements_adjacent_pages_doctype_action(doctype, action, page1, page2):
     ## get number pages belonging to submission:
@@ -2801,22 +2801,22 @@ def swap_elements_adjacent_pages_doctype_action(doctype, action, page1, page2):
     q = """UPDATE sbmFIELD SET pagenb=%s WHERE subname=%s AND pagenb=%s"""
 
     ## move fields from p1 to tmp
-    run_sql(q, (tmp_page, "%s%s" % (action, doctype), page1))
+    run_sql(q, (tmp_page, "%s%s" % (action, doctype), page1)) # kwalitee: disable=sql
     num_fields_p1 = get_numberfields_submissionpage_doctype_action(doctype=doctype, action=action, pagenum=page1)
     if num_fields_p1 != 0:
         ## problem moving some fields from page 1 - move them back from tmp
-        run_sql(q, (page1, "%s%s" % (action, doctype), tmp_page))
+        run_sql(q, (page1, "%s%s" % (action, doctype), tmp_page)) # kwalitee: disable=sql
         return 3
     ## move fields from p2 to p1
-    run_sql(q, (page1, "%s%s" % (action, doctype), page2))
+    run_sql(q, (page1, "%s%s" % (action, doctype), page2)) # kwalitee: disable=sql
     num_fields_p2 = get_numberfields_submissionpage_doctype_action(doctype=doctype, action=action, pagenum=page2)
     if num_fields_p2 != 0:
         ## problem moving some fields from page 2 to page 1 - try to move everything back
-        run_sql(q, (page2, "%s%s" % (action, doctype), page1))
-        run_sql(q, (page1, "%s%s" % (action, doctype), tmp_page))
+        run_sql(q, (page2, "%s%s" % (action, doctype), page1)) # kwalitee: disable=sql
+        run_sql(q, (page1, "%s%s" % (action, doctype), tmp_page))   # kwalitee: disable=sql
         return 4
     ## move fields from tmp_page to page2:
-    run_sql(q, (page2, "%s%s" % (action, doctype), tmp_page))
+    run_sql(q, (page2, "%s%s" % (action, doctype), tmp_page)) # kwalitee: disable=sql
     num_fields_tmp_page = get_numberfields_submissionpage_doctype_action(doctype=doctype, action=action, pagenum=tmp_page)
     if num_fields_tmp_page != 0:
         ## problem moving some fields from tmp_page to page 2
@@ -2829,17 +2829,17 @@ def swap_elements_adjacent_pages_doctype_action(doctype, action, page1, page2):
 
 def update_modificationdate_fields_submissionpage(doctype, action, subpage):
     q = """UPDATE sbmFIELD SET md=CURDATE() WHERE subname=%s AND pagenb=%s"""
-    run_sql(q, ("%s%s" % (action, doctype), subpage))
+    run_sql(q, ("%s%s" % (action, doctype), real_escape_string(subpage))) # kwalitee: disable=sql
     return 0
 
 def update_modificationdate_of_field_on_submissionpage(doctype, action, subpage, fieldnb):
     q = """UPDATE sbmFIELD SET md=CURDATE() WHERE subname=%s AND pagenb=%s AND fieldnb=%s"""
-    run_sql(q, ("%s%s" % (action, doctype), subpage, fieldnb))
+    run_sql(q, ("%s%s" % (action, doctype), real_escape_string(subpage),real_escape_string(fieldnb))) # kwalitee: disable=sql
     return 0
 
 def decrement_by_one_pagenumber_submissionelements_abovepage(doctype, action, frompage):
     q = """UPDATE sbmFIELD SET pagenb=pagenb-1, md=CURDATE() WHERE subname=%s AND pagenb > %s"""
-    run_sql(q, ("%s%s" % (action, doctype), frompage))
+    run_sql(q, ("%s%s" % (action, doctype), real_escape_string(frompage))) # kwalitee: disable=sql
     return 0
 
 def get_details_and_description_of_all_fields_on_submissionpage(doctype, action, pagenum):
@@ -2855,7 +2855,7 @@ def get_details_and_description_of_all_fields_on_submissionpage(doctype, action,
         """LEFT JOIN sbmFIELDDESC AS el ON el.name=field.fidesc """\
         """WHERE field.subname=%s AND field.pagenb=%s """\
         """ORDER BY field.fieldnb ASC"""
-    res = run_sql(q, ("%s%s" % (action, doctype), pagenum))
+    res = run_sql(q, ("%s%s" % (action, doctype), real_escape_string(pagenum))) # kwalitee: disable=sql
     return res
 
 def insert_field_onto_submissionpage(doctype, action, pagenum, fieldname, fieldtext, fieldlevel, fieldshortdesc, fieldcheck):
@@ -2878,8 +2878,7 @@ def insert_field_onto_submissionpage(doctype, action, pagenum, fieldname, fieldt
         """fiefi1, fiefi2) """\
         """(SELECT %s, %s, COUNT(subname)+1, %s, %s, %s, %s, %s, CURDATE(), CURDATE(), NULL, NULL FROM sbmFIELD """ \
         """WHERE subname=%s AND pagenb=%s)"""
-    run_sql(q, ("%s%s" % (action, doctype), pagenum, fieldname, fieldtext,
-                fieldlevel, fieldshortdesc, fieldcheck, "%s%s" % (action, doctype), pagenum))
+    run_sql(q, ("%s%s" % (action, doctype), pagenum, fieldname, fieldtext, fieldlevel, fieldshortdesc, fieldcheck, "%s%s" % (action, doctype), pagenum)) # kwalitee: disable=sql
     numfields_postinsert = get_numberfields_submissionpage_doctype_action(doctype=doctype, action=action, pagenum=pagenum)
     if not (numfields_postinsert > numfields_preinsert):
         ## seems as though the new field was not inserted:
@@ -2889,7 +2888,7 @@ def insert_field_onto_submissionpage(doctype, action, pagenum, fieldname, fieldt
 
 def delete_a_field_from_submissionpage(doctype, action, pagenum, fieldposn):
     q = """DELETE FROM sbmFIELD WHERE subname=%s AND pagenb=%s AND fieldnb=%s"""
-    run_sql(q, ("""%s%s""" % (action, doctype), pagenum, fieldposn))
+    run_sql(q, ("""%s%s""" % (action, doctype), real_escape_string(pagenum), real_escape_string(fieldposn))) # kwalitee: disable=sql
     ## check number of fields at deleted field's position. If 0, promote all fields below it by 1 posn;
     ## If field(s) still exists at deleted field's posn, report error.
     numfields_deletedfieldposn = \
@@ -2900,7 +2899,7 @@ def delete_a_field_from_submissionpage(doctype, action, pagenum, fieldposn):
         return 0
     else:
         ## everything NOT OK - couldn't delete field - retry
-        run_sql(q, ("""%s%s""" % (action, doctype), pagenum, fieldposn))
+        run_sql(q, ("""%s%s""" % (action, doctype), real_escape_string(pagenum), real_escape_string(fieldposn))) # kwalitee: disable=sql
         numfields_deletedfieldposn = \
             get_number_of_fields_on_submissionpage_at_positionx(doctype=doctype, action=action, pagenum=pagenum, positionx=fieldposn)
         if numfields_deletedfieldposn == 0:
@@ -3009,7 +3008,7 @@ def move_field_on_submissionpage_from_positionx_to_positiony(doctype, action, pa
         tmp_fieldnb = numfields_page + randint(3,10)
 
         ## move field from position 'movefieldfrom' to tempoary position 'tmp_fieldnb':
-        run_sql(q, (tmp_fieldnb, "%s%s" % (action, doctype), pagenum, movefieldfrom))
+        run_sql(q, (tmp_fieldnb, "%s%s" % (action, doctype), real_escape_string(pagenum), movefieldfrom)) # kwalitee: disable=sql
         num_fields_posn_movefieldfrom = \
               get_number_of_fields_on_submissionpage_at_positionx(doctype=doctype, action=action, pagenum=pagenum, positionx=movefieldfrom)
 
@@ -3020,7 +3019,7 @@ def move_field_on_submissionpage_from_positionx_to_positiony(doctype, action, pa
             #return 'WRN_WEBSUBMITADMIN_UNABLE_TO_SWAP_TWO_FIELDS_ON_SUBMISSION_PAGE_COULDNT_MOVE_FIELD1_TO_TEMP_POSITION'
 
         ## move field from position 'movefieldto' to position 'movefieldfrom':
-        run_sql(q, (movefieldfrom, "%s%s" % (action, doctype), pagenum, movefieldto))
+        run_sql(q, (movefieldfrom, "%s%s" % (action, doctype), real_escape_string(pagenum), movefieldto)) # kwalitee: disable=sql
         num_fields_posn_movefieldto = \
               get_number_of_fields_on_submissionpage_at_positionx(doctype=doctype, action=action, pagenum=pagenum, positionx=movefieldto)
         if num_fields_posn_movefieldto != 0:
@@ -3028,12 +3027,12 @@ def move_field_on_submissionpage_from_positionx_to_positiony(doctype, action, pa
             ## try to reverse the changes made so far, then return with an error:
 
             ## move field at temporary posn back to 'movefieldfrom' position:
-            run_sql(q, (movefieldfrom, "%s%s" % (action, doctype), pagenum, tmp_fieldnb))
+            run_sql(q, (movefieldfrom, "%s%s" % (action, doctype), real_escape_string(pagenum), tmp_fieldnb)) # kwalitee: disable=sql
             return 3
             #return 'WRN_WEBSUBMITADMIN_UNABLE_TO_SWAP_TWO_FIELDS_ON_SUBMISSION_PAGE_COULDNT_MOVE_FIELD2_TO_FIELD1_POSITION'
 
         ## move field from temporary position 'tmp_fieldnb' to position 'movefieldto':
-        run_sql(q, (movefieldto, "%s%s" % (action, doctype), pagenum, tmp_fieldnb))
+        run_sql(q, (movefieldto, "%s%s" % (action, doctype), real_escape_string(pagenum), tmp_fieldnb)) # kwalitee: disable=sql
         num_fields_posn_tmp_fieldnb = \
               get_number_of_fields_on_submissionpage_at_positionx(doctype=doctype, action=action, pagenum=pagenum, positionx=tmp_fieldnb)
         if num_fields_posn_tmp_fieldnb != 0:
@@ -3051,7 +3050,7 @@ def move_field_on_submissionpage_from_positionx_to_positiony(doctype, action, pa
         tmp_fieldnb = 0 - randint(3,10)
 
         ## move field from position 'movefieldfrom' to tempoary position 'tmp_fieldnb':
-        run_sql(q, (tmp_fieldnb, "%s%s" % (action, doctype), pagenum, movefieldfrom))
+        run_sql(q, (tmp_fieldnb, "%s%s" % (action, doctype), real_escape_string(pagenum), movefieldfrom)) # kwalitee: disable=sql
         num_fields_posn_movefieldfrom = \
               get_number_of_fields_on_submissionpage_at_positionx(doctype=doctype, action=action, pagenum=pagenum, positionx=movefieldfrom)
 
@@ -3072,7 +3071,7 @@ def move_field_on_submissionpage_from_positionx_to_positiony(doctype, action, pa
             if num_fields_posn_movefieldfrom == 0:
                 ## no field there - it was not possible to decrement the field position of all fields below the field moved 'tmp_fieldnb'
                 ## try to move the field back from 'tmp_fieldnb'
-                run_sql(q, (movefieldfrom, "%s%s" % (action, doctype), pagenum, tmp_fieldnb))
+                run_sql(q, (movefieldfrom, "%s%s" % (action, doctype), real_escape_string(pagenum), tmp_fieldnb)) # kwalitee: disable=sql
                 ## return an ERROR message
                 return 5
                 #return 'WRN_WEBSUBMITADMIN_UNABLE_TO_MOVE_FIELD_TO_NEW_POSITION_ON_SUBMISSION_PAGE_COULDNT_DECREMENT_POSITION_OF_FIELDS_BELOW_FIELD1'
@@ -3090,7 +3089,7 @@ def move_field_on_submissionpage_from_positionx_to_positiony(doctype, action, pa
             #return 'WRN_WEBSUBMITADMIN_UNABLE_TO_MOVE_FIELD_TO_NEW_POSITION_ON_SUBMISSION_PAGE_COULDNT_INCREMENT_POSITION_OF_FIELDS_AT_AND_BELOW_FIELD2'
 
         ## Move field from temporary position to position 'movefieldto':
-        run_sql(q, (movefieldto, "%s%s" % (action, doctype), pagenum, tmp_fieldnb))
+        run_sql(q, (movefieldto, "%s%s" % (action, doctype), real_escape_string(pagenum), tmp_fieldnb)) # kwalitee: disable=sql
         num_fields_posn_movefieldto = \
           get_number_of_fields_on_submissionpage_at_positionx(doctype=doctype, action=action, pagenum=pagenum, positionx=movefieldto)
         if num_fields_posn_movefieldto == 0:
@@ -3116,7 +3115,7 @@ def increment_position_of_all_fields_atposition_greaterthan_positionx_on_submiss
     if type(increment) is not int:
         increment = 1
     q = """UPDATE sbmFIELD SET fieldnb=fieldnb+%s WHERE subname=%s AND pagenb=%s AND fieldnb > %s"""
-    res = run_sql(q, (increment, "%s%s" % (action, doctype), pagenum, positionx))
+    res = run_sql(q, (increment, "%s%s" % (action, doctype), real_escape_string(pagenum), positionx)) # kwalitee: disable=sql
     try:
         return int(res)
     except ValueError:
@@ -3135,7 +3134,7 @@ def decrement_position_of_all_fields_atposition_greaterthan_positionx_on_submiss
     if type(decrement) is not int:
         decrement = 1
     q = """UPDATE sbmFIELD SET fieldnb=fieldnb-%s WHERE subname=%s AND pagenb=%s AND fieldnb > %s"""
-    res = run_sql(q, (decrement, "%s%s" % (action, doctype), pagenum, positionx))
+    res = run_sql(q, (decrement, "%s%s" % (action, doctype), real_escape_string(pagenum), real_escape_String(positionx))) # kwalitee: disable=sql
     try:
         return int(res)
     except ValueError:
@@ -3143,7 +3142,7 @@ def decrement_position_of_all_fields_atposition_greaterthan_positionx_on_submiss
 
 def delete_allfields_submissionpage_doctype_action(doctype, action, pagenum):
     q = """DELETE FROM sbmFIELD WHERE pagenb=%s AND subname=%s"""
-    run_sql(q, (pagenum, """%s%s""" % (action, doctype)))
+    run_sql(q, (real_escape_string(pagenum), """%s%s""" % (action, doctype))) # kwalitee: disable=sql
     numrows_fields = get_numberfields_submissionpage_doctype_action(doctype=doctype,
                                                                         action=action, pagenum=pagenum)
     if numrows_fields == 0:
@@ -3174,7 +3173,7 @@ def get_details_allsubmissionfields_on_submission_page(doctype, action, pagenum)
     """
     q = """SELECT subname, fieldnb, fidesc, fitext, level, sdesc, checkn, cd, md FROM sbmFIELD """\
         """WHERE subname=%s AND pagenb=%s ORDER BY fieldnb ASC"""
-    return run_sql(q, ("%s%s" % (action, doctype), pagenum))
+    return run_sql(q, ("%s%s" % (action, doctype), real_escape_string(pagenum))) # kwalitee: disable=sql
 
 def get_details_of_field_at_positionx_on_submissionpage(doctype, action, pagenum, fieldposition):
     """Get the details of a particular field in a submission page.
@@ -3189,7 +3188,7 @@ def get_details_of_field_at_positionx_on_submissionpage(doctype, action, pagenum
     fielddets = []
     q = """SELECT subname, fieldnb, fidesc, fitext, level, sdesc, checkn, cd, md FROM sbmFIELD """\
         """WHERE subname=%s AND pagenb=%s AND fieldnb=%s LIMIT 1"""
-    res = run_sql(q, ("%s%s" % (action, doctype), pagenum, fieldposition))
+    res = run_sql(q, ("%s%s" % (action, doctype), pagenum, fieldposition)) # kwalitee: disable=sql
     if len(res) > 0:
         fielddets = res[0]
     return fielddets

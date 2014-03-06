@@ -282,7 +282,7 @@ def __import_baskets(default_topic_name="Imported baskets",
                                           real_escape_string(date_modification))
         values = reduce(lambda x, y: x + ',' + y, map(basket_updater, baskets))
         query2 = "INSERT INTO bskBASKET (id, name, id_owner, date_modification) VALUES %s"
-        run_sql(query2 % values)
+        run_sql(query2 , values)
         def user_updater(basket):
             """"""
             (bskid, name, is_public, id_owner, date_modification) = basket
@@ -291,7 +291,7 @@ def __import_baskets(default_topic_name="Imported baskets",
                                      default_topic_name)
         values = reduce(lambda x, y: x + ',' + y, map(user_updater, baskets))
         query3 = "INSERT INTO user_bskBASKET (id_bskBASKET, id_user, topic) VALUES %s"
-        run_sql(query3 % values)
+        run_sql(query3 , values)
         shared_baskets = filter(lambda x: x[2]!='n', baskets)
         def usergroup_updater(basket):
             """"""
@@ -302,12 +302,12 @@ def __import_baskets(default_topic_name="Imported baskets",
         values = reduce(lambda x, y: x + ',' + y, map(usergroup_updater, shared_baskets))
         query4 = "INSERT INTO usergroup_bskBASKET (id_usergroup, id_bskBASKET, date_shared, share_level) VALUES %s"
         if default_share_level:
-            run_sql(query4 % values)
+            run_sql(query4 , values)
     return len(baskets)
 
 def __count_records(bskid):
     query1 = "SELECT count(id_record) FROM basket_record WHERE id_basket=%i GROUP BY id_basket"
-    return run_sql(query1 % int(bskid))[0][0]
+    return run_sql(query1 , (int(bskid), ))[0][0]
 
 def __import_records():
     """"""
@@ -331,7 +331,7 @@ def __import_records():
     iterator = 0
     while iterator < len(records):
         temp_val = reduce(lambda x, y: x + ',' + y, map(records_updater, records[iterator:iterator+10000]))
-        run_sql(query2 % temp_val)
+        run_sql(query2 , temp_val)
         if iterator + 10000 <= len(records):
             last_rec = iterator + 10000
         else:
@@ -345,7 +345,7 @@ def __set_auto_increment_value():
     query1 = "SELECT MAX(id) FROM basket"
     value = int(run_sql(query1)[0][0])
     query2 = "ALTER TABLE bskBASKET AUTO_INCREMENT=%i"
-    run_sql(query2 % (value + 1))
+    run_sql(query2 , (value + 1))
 
 def __drop_baskets():
     """"""

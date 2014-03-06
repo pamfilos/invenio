@@ -47,7 +47,7 @@ from invenio.bibindex_engine_config import CFG_BIBINDEX_ADDING_RECORDS_STARTED_S
 from invenio.bibtask import task_low_level_submission
 from invenio.config import CFG_BINDIR, CFG_LOGDIR
 from invenio.testutils import make_test_suite, run_test_suite, nottest
-from invenio.dbquery import run_sql, deserialize_via_marshal
+from invenio.dbquery import run_sql, deserialize_via_marshal, wash_table_column_name
 from invenio.intbitset import intbitset
 from invenio.search_engine import get_record
 from invenio.search_engine_utils import get_fieldvalues
@@ -126,7 +126,7 @@ def reindex_word_tables_into_testtables(index_name, recids = None, prefix = 'tes
     """
     index_id = get_index_id_from_index_name(index_name)
     query_update = prepare_for_index_update(index_id, parameters)
-    last_updated = run_sql("""SELECT last_updated FROM idxINDEX WHERE id=%s""" % index_id)[0][0]
+    last_updated = run_sql("""SELECT last_updated FROM idxINDEX WHERE id=%s""" , (index_id,))[0][0]
 
     test_tablename = "%sidxWORD%02d" % (prefix, index_id)
     query_drop_forward_index_table = """DROP TABLE IF EXISTS %sF""" % test_tablename
@@ -747,7 +747,7 @@ class BibIndexCJKTokenizerTitleIndexTest(InvenioTestCase):
 
     def test_splliting_and_indexing_CJK_characters_forward_table(self):
         """CJK Tokenizer - searching for a CJK term in title index, forward table"""
-        query = "SELECT * from test_idxWORD%02dF where term='\xe6\x95\xac'" % get_index_id_from_index_name('title')
+        query = "SELECT * from test_idxWORD%02dF where term='\xe6\x95\xac'" % get_index_id_from_index_name('title') # kwalitee: disable=sql
         res = run_sql(query)
         iset = []
         if res:
@@ -757,7 +757,7 @@ class BibIndexCJKTokenizerTitleIndexTest(InvenioTestCase):
 
     def test_splliting_and_indexing_CJK_characters_reversed_table(self):
         """CJK Tokenizer - comparing terms for record with chinese poetry in title index, reverse table"""
-        query = "SELECT * from test_idxWORD%02dR where id_bibrec='104'" % get_index_id_from_index_name('title')
+        query = "SELECT * from test_idxWORD%02dR where id_bibrec='104'" % get_index_id_from_index_name('title') # kwalitee: disable=sql
         res = run_sql(query)
         iset = []
         if res:
@@ -799,7 +799,7 @@ class BibIndexAuthorityRecordTest(InvenioTestCase):
         reindex_for_type_with_bibsched(index_name, force_all=True)
         self.assertTrue(
             authority_string in deserialize_via_marshal(
-                run_sql("SELECT termlist FROM %s WHERE id_bibrec = %s" % (table, bibRecID))[0][0]
+                run_sql("SELECT termlist FROM %s WHERE id_bibrec = %s" % (wash_table_column_name(table), bibRecID))[0][0] # kwalitee: disable=sql
             )
         )
 
@@ -943,26 +943,26 @@ def create_index_tables(index_id):
                         INDEX (runtime)
                      ) ENGINE=MyISAM;"""
 
-    run_sql(query_create % index_id)
-    run_sql(query_create_r % index_id)
-    run_sql(query_create_q % index_id)
+    run_sql(query_create % wash_table_column_name(index_id)) # kwalitee: disable=sql
+    run_sql(query_create_r % wash_table_column_name(index_id)) # kwalitee: disable=sql
+    run_sql(query_create_q % wash_table_column_name(index_id)) # kwalitee: disable=sql
 
 
 def drop_index_tables(index_id):
     query_drop = """DROP TABLE IF EXISTS idxWORD%02d%s"""
-    run_sql(query_drop % (index_id, "F"))
-    run_sql(query_drop % (index_id, "R"))
-    run_sql(query_drop % (index_id, "Q"))
+    run_sql(query_drop % (wash_tbale_column_name(index_id), "F")) # kwalitee: disable=sql
+    run_sql(query_drop % (wash_table_column_name(index_id), "R")) # kwalitee: disable=sql
+    run_sql(query_drop % (wash_table_column_name(index_id), "Q")) # kwalitee: disable=sql
 
 
 def create_virtual_index(index_id, dependent_indexes):
     """creates new virtual index and binds it to specific dependent indexes"""
     index_name = 'testindex'
     query = """INSERT INTO idxINDEX (id, name, tokenizer) VALUES (%s, '%s', 'BibIndexDefaultTokenizer')"""
-    run_sql(query % (index_id, index_name))
-    query = """INSERT INTO idxINDEX_idxINDEX VALUES (%s, %s)"""
+    run_sql(query % (real_escape_string(index_id), index_name)) # kwalitee: disable=sql
+    query = """INSERT INTO idxINDEX_idxINDEX VALUES (%s, %s)""" # kwalitee: disable=sql
     for index in dependent_indexes:
-        run_sql(query % (index_id, get_index_id_from_index_name(index)))
+        run_sql(query, (index_id, get_index_id_from_index_name(index)))
     create_index_tables(index_id)
     return index_name
 
@@ -973,7 +973,7 @@ def remove_virtual_index(index_id):
     query = """DELETE FROM idxINDEX WHERE id=%s""" % index_id
     run_sql(query)
     query = """DELETE FROM idxINDEX_idxINDEX WHERE id_virtual=%s"""
-    run_sql(query % index_id)
+    run_sql(query, (index_id,))
 
 
 class BibIndexFindingAffectedIndexes(InvenioTestCase):
@@ -1223,12 +1223,12 @@ class BibIndexGlobalIndexContentTest(InvenioTestCase):
         title_id = get_index_id_from_index_name('title')
         prefix = make_prefix("title")
         for rec in range(1, 4):
-            query = """SELECT termlist FROM idxWORD%02dR WHERE id_bibrec=%s""" % (title_id, rec)
-            res = run_sql(query)
+            query = """SELECT termlist FROM %s WHERE id_bibrec=%%s""" % wash_table_column_name("idxWORD%02dR"%title_id)
+            res = run_sql(query, (rec,) )
             termlist_title = deserialize_via_marshal(res[0][0])
             termlist_title = [prefix + item for item in termlist_title]
-            query = """SELECT termlist FROM idxWORD%02dR WHERE id_bibrec=%s""" % (global_id, rec)
-            glob = run_sql(query)
+            query = """SELECT termlist FROM %s WHERE id_bibrec=%%s""" % wash_table_column_name("idxWORD%02dR"% global_id)
+            glob = run_sql(query, (rec,))
             termlist_global = deserialize_via_marshal(glob[0][0])
             self.assertEqual(self.is_part_of(termlist_global, termlist_title), True)
 
@@ -1238,12 +1238,12 @@ class BibIndexGlobalIndexContentTest(InvenioTestCase):
         abstract_id = get_index_id_from_index_name('abstract')
         prefix = make_prefix("abstract")
         for rec in range(6, 9):
-            query = """SELECT termlist FROM idxWORD%02dR WHERE id_bibrec=%s""" % (abstract_id, rec)
-            res = run_sql(query)
+            query = """SELECT termlist FROM %s WHERE id_bibrec=%%s""" % wash_table_column_name("idxWORD%02dR" % abstract_id)
+            res = run_sql(query, (rec,))
             termlist_abstract = deserialize_via_marshal(res[0][0])
             termlist_abstract = [prefix + item for item in termlist_abstract]
-            query = """SELECT termlist FROM idxWORD%02dR WHERE id_bibrec=%s""" % (global_id, rec)
-            glob = run_sql(query)
+            query = """SELECT termlist FROM %s WHERE id_bibrec=%%s""" % wash_table_column_name("idxWORD%02dR" % global_id)
+            glob = run_sql(query, (rec,))
             termlist_global = deserialize_via_marshal(glob[0][0])
             self.assertEqual(self.is_part_of(termlist_global, termlist_abstract), True)
 
@@ -1253,12 +1253,12 @@ class BibIndexGlobalIndexContentTest(InvenioTestCase):
         misc_id = get_index_id_from_index_name('miscellaneous')
         prefix = make_prefix("miscellaneous")
         for rec in range(10, 14):
-            query = """SELECT termlist FROM idxWORD%02dR WHERE id_bibrec=%s""" % (misc_id, rec)
-            res = run_sql(query)
+            query = """SELECT termlist FROM %s WHERE id_bibrec=%%s"""% wash_table_column_name("idxWORD%02dR" % misc_id)
+            res = run_sql(query, (rec,))
             termlist_misc = deserialize_via_marshal(res[0][0])
             termlist_misc = [prefix + item for item in termlist_misc]
-            query = """SELECT termlist FROM idxWORD%02dR WHERE id_bibrec=%s""" % (global_id, rec)
-            glob = run_sql(query)
+            query = """SELECT termlist FROM %s WHERE id_bibrec=%%s"""% wash_table_column_name("idxWORD%02dR" % global_id)
+            glob = run_sql(query, (rec,))
             termlist_global = deserialize_via_marshal(glob[0][0])
             self.assertEqual(self.is_part_of(termlist_global, termlist_misc), True)
 
@@ -1266,9 +1266,9 @@ class BibIndexGlobalIndexContentTest(InvenioTestCase):
         """bibindex - checks if the same words are in journal and global index, forward table"""
         global_id = get_index_id_from_index_name('global')
         journal_id = get_index_id_from_index_name('journal')
-        query = """SELECT term FROM idxWORD%02dF""" % journal_id
+        query = """SELECT term FROM %s""" % wash_table_column_name("idxWORD%02dF" % journal_id)
         res = zip(*run_sql(query))[0]
-        query = """SELECT term FROM idxWORD%02dF""" % global_id
+        query = """SELECT term FROM %s""" % wash_table_column_name("idxWORD%02dF" % global_id)
         glob = zip(*run_sql(query))[0]
         self.assertEqual(self.is_part_of(glob, res), True)
 
@@ -1422,46 +1422,46 @@ class BibIndexVirtualIndexRemovalTest(InvenioTestCase):
 
     def test_authorcount_removal_number_of_items(self):
         """bibindex - checks virtual index after authorcount index removal - number of items"""
-        query = """SELECT count(*) FROM idxWORD%02dF"""
-        res = run_sql(query % self._id)
+        query = """SELECT count(*) FROM %s"""% wash_table_column_name("idxWORD%02dF"% self._id)
+        res = run_sql(query) # kwalitee: disable=sql
         self.assertEqual(157, res[0][0])
 
     def test_authorcount_removal_common_terms_intact(self):
         """bibindex - checks virtual index after authorcount index removal - common terms"""
-        query = """SELECT term FROM idxWORD%02dF WHERE term IN ('10', '2', '4', '7')"""
-        res = run_sql(query % self._id)
+        query = """SELECT term FROM %s WHERE term IN ('10', '2', '4', '7')"""% wash_table_column_name("idxWORD%02dF"% self._id)
+        res = run_sql(query) # kwalitee: disable=sql
         self.assertEqual(4, len(res))
 
     def test_authorcount_removal_no_315_term(self):
         """bibindex - checks virtual index after authorcount index removal - no '315' term in virtual index"""
-        query = """SELECT term FROM idxWORD%02dF WHERE term='315'"""
-        res = run_sql(query % self._id)
+        query = """SELECT term FROM %s WHERE term='315'""" % wash_table_column_name("idxWORD%02dF"% self._id)
+        res = run_sql(query) # kwalitee: disable=sql
         self.assertEqual(0, len(res))
 
     def test_authorcount_removal_term_10_hitlist(self):
         """bibindex - checks virtual index after authorcount index removal - hitlist for '10' term"""
-        query = """SELECT hitlist FROM idxWORD%02dF WHERE term='10'"""
-        res = run_sql(query % self._id)
+        query = """SELECT hitlist FROM %s WHERE term='10'""" % wash_table_column_name("idxWORD%02dF"% self._id)
+        res = run_sql(query) # kwalitee: disable=sql
         self.assertEqual([80, 92], intbitset(res[0][0]).tolist())
 
     def test_authorcount_removal_term_1985_hitlist(self):
         """bibindex - checks virtual index after authorcount index removal - hitlist for '1985' term"""
-        query = """SELECT hitlist FROM idxWORD%02dF WHERE term='1985'"""
-        res = run_sql(query % self._id)
+        query = """SELECT hitlist FROM %s WHERE term='1985'""" % wash_table_column_name("idxWORD%02dF"% self._id)
+        res = run_sql(query) # kwalitee: disable=sql
         self.assertEqual([16, 18], intbitset(res[0][0]).tolist())
 
     def test_authorcount_removal_record_16_hitlist(self):
         """bibindex - checks virtual index after authorcount index removal - termlist for record 16"""
-        query = """SELECT termlist FROM idxWORD%02dR WHERE id_bibrec=16"""
-        res = run_sql(query % self._id)
+        query = """SELECT termlist FROM %s WHERE id_bibrec=16""" % wash_table_column_name("idxWORD%02dR"% self._id)
+        res = run_sql(query)
         terms = deserialize_via_marshal(res[0][0])
         terms = [re.sub(re_prefix, '', term) for term in terms]
         self.assertEqual(['1985'], terms)
 
     def test_authorcount_removal_record_10_hitlist(self):
         """bibindex - checks virtual index after authorcount index removal - termlist for record 10"""
-        query = """SELECT termlist FROM idxWORD%02dR WHERE id_bibrec=10"""
-        res = run_sql(query % self._id)
+        query = """SELECT termlist FROM %s WHERE id_bibrec=10""" % wash_table_column_name("idxWORD%02dR"% self._id)
+        res = run_sql(query) # kwalitee: disable=sql
         terms = deserialize_via_marshal(res[0][0])
         terms = [re.sub(re_prefix, '', term) for term in terms]
         self.assertEqual(sorted(['2002', 'Eur. Phys. J., C']), sorted(terms))
@@ -1472,15 +1472,15 @@ class BibIndexVirtualIndexRemovalTest(InvenioTestCase):
         vit = VirtualIndexTable(self.new_index_name,
                                     CFG_BIBINDEX_INDEX_TABLE_TYPE["Words"])
         vit.remove_dependent_index("year")
-        query = """SELECT count(*) FROM idxWORD%02dF"""
-        res = run_sql(query % self._id)
+        query = """SELECT count(*) FROM %s""" % wash_table_column_name("idxWORD%02dF"% self._id)
+        res = run_sql(query) # kwalitee: disable=sql
         self.assertEqual(134, res[0][0])
 
     def test_year_removal_record_18_hitlist(self):
         """bibindex - checks virtual index after year removal - termlist for record 18"""
         #must be run after: tearDown, test_year_removal_number_of_items
-        query = """SELECT termlist FROM idxWORD%02dR WHERE id_bibrec=18"""
-        res = run_sql(query % self._id)
+        query = """SELECT termlist FROM %s WHERE id_bibrec=18""" % wash_table_column_name("idxWORD%02dR"% self._id)
+        res = run_sql(query)
         terms = deserialize_via_marshal(res[0][0])
         terms = [re.sub(re_prefix, '', term) for term in terms]
         self.assertEqual(sorted(['151', '357','1985', 'Phys. Lett., B 151 (1985) 357', 'Phys. Lett., B']),
@@ -1676,7 +1676,7 @@ class BibIndexVirtualIndexQueueTableTest(InvenioTestCase):
     def test_1_correct_entry_in_queue_for_word_table(self):
         """bibindex - checks correct entry in queue table for words"""
         self.index_dependent_index('title', [[10,14]], CFG_BIBINDEX_INDEX_TABLE_TYPE["Words"])
-        query = "SELECT * FROM idxWORD01Q"
+        query = "SELECT * FROM idxWORD01Q" # kwalitee: disable=sql
         res = run_sql(query)
         self.assertEqual((10, 14), (res[0][2], res[0][3]))
         self.run_update_for_virtual_index(CFG_BIBINDEX_INDEX_TABLE_TYPE["Words"])
@@ -1684,7 +1684,7 @@ class BibIndexVirtualIndexQueueTableTest(InvenioTestCase):
     def test_2_correct_entry_in_queue_for_pair_table(self):
         """bibindex - checks correct entry in queue table for pairs"""
         self.index_dependent_index('collection', [[1,5],[20,21]], CFG_BIBINDEX_INDEX_TABLE_TYPE["Pairs"])
-        query = "SELECT * FROM idxPAIR01Q ORDER BY runtime,id DESC"
+        query = "SELECT * FROM idxPAIR01Q ORDER BY runtime,id DESC" # kwalitee: disable=sql
         res = run_sql(query)
         self.assertEqual(2, len(res))
         self.assertEqual((20, 21), (res[0][2], res[0][3]))
@@ -1694,7 +1694,7 @@ class BibIndexVirtualIndexQueueTableTest(InvenioTestCase):
     def test_3_correct_entry_in_queue_for_phrase_table(self):
         """bibindex - checks correct entry in queue table for phrases"""
         self.index_dependent_index('keyword', [[19,19]], CFG_BIBINDEX_INDEX_TABLE_TYPE["Phrases"])
-        query = "SELECT * FROM idxPHRASE01Q"
+        query = "SELECT * FROM idxPHRASE01Q" # kwalitee: disable=sql
         res = run_sql(query)
         self.assertEqual((19, 19), (res[0][2], res[0][3]))
         self.assertEqual('keyword', res[0][4])
@@ -1702,7 +1702,7 @@ class BibIndexVirtualIndexQueueTableTest(InvenioTestCase):
 
     def test_4_no_entries_in_queue_table(self):
         """bibindex - checks if virtual index removes entries from queue table after update"""
-        query = "SELECT * FROM idxWORD01Q"
+        query = "SELECT * FROM idxWORD01Q" # kwalitee: disable=sql
         res = run_sql(query)
         empty = tuple()
         self.assertEqual(empty, res)

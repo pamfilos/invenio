@@ -71,8 +71,8 @@ def do_upgrade():
         new_request_tickets_num = len(new_request_tickets)
         new_request_tickets = serialize(new_request_tickets)
 
-        run_sql("""insert into aidPERSONIDDATA
-                   (personid, tag, datablob, opt1)
+        run_sql("""insert into aidPERSONIDDATA """ +   # kwalitee: disable=sql
+                   """(personid, tag, datablob, opt1)
                    values (%s, %s, %s, %s)""",
                    (pid, 'request_tickets', new_request_tickets, new_request_tickets_num) )
 

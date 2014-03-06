@@ -23,7 +23,7 @@ import re
 
 from operator import itemgetter
 
-from invenio.dbquery import run_sql, deserialize_via_marshal
+from invenio.dbquery import run_sql, deserialize_via_marshal, wash_table_column_name
 from invenio.bibindex_engine_stemmer import stem
 from invenio.bibindex_engine_stopwords import is_stopword
 
@@ -55,7 +55,7 @@ def find_similar(rank_method_code, recID, hitset, rank_limit_relevance,verbose, 
     except Exception,e :
         return (None, "Warning: Error in record ID, please check that a number is given.", "", voutput)
 
-    rec_terms = run_sql("""SELECT termlist FROM %sR WHERE id_bibrec=%%s""" % methods[rank_method_code]["rnkWORD_table"][:-1],  (recID,))
+    rec_terms = run_sql("""SELECT termlist FROM %sR WHERE id_bibrec=%%s""" % wash_table_column_name(methods[rank_method_code]["rnkWORD_table"][:-1]),  (recID,)) # kwalitee: disable=sql
     if not rec_terms:
         return (None, "Warning: Requested record does not seem to exist.", "", voutput)
     rec_terms = deserialize_via_marshal(rec_terms[0][0])
@@ -65,7 +65,7 @@ def find_similar(rank_method_code, recID, hitset, rank_limit_relevance,verbose, 
         return (None, "Warning: Record specified has no content indexed for use with this method.", "", voutput)
     else:
         terms = "%s" % rec_terms.keys()
-        terms_recs = dict(run_sql("""SELECT term, hitlist FROM %s WHERE term IN (%s)""" % (methods[rank_method_code]["rnkWORD_table"], terms[1:len(terms) - 1])))
+        terms_recs = dict(run_sql("""SELECT term, hitlist FROM %s WHERE term IN (%%s)"""% wash_table_column_name(methods[rank_method_code]["rnkWORD_table"]), (terms[1:len(terms) - 1],)))
 
     tf_values = {}
     #Calculate all term frequencies
@@ -93,7 +93,7 @@ def find_similar(rank_method_code, recID, hitset, rank_limit_relevance,verbose, 
         (reclist, hitset) = sort_record_relevance_findsimilar(recdict, rec_termcount, hitset, rank_limit_relevance, verbose)
 
     if verbose > 0:
-        voutput += "<br />Number of terms: %s<br />" % run_sql("SELECT count(id) FROM %s" % methods[rank_method_code]["rnkWORD_table"])[0][0]
+        voutput += "<br />Number of terms: %s<br />" % run_sql("SELECT count(id) FROM %s" % wash_table_column_name(methods[rank_method_code]["rnkWORD_table"]))[0][0] # kwalitee: disable=sql
         voutput += "Number of terms to use for query: %s<br />" % len(lwords)
         voutput += "Terms: %s<br />" % lwords
         voutput += "Current number of recIDs: %s<br />" % (methods[rank_method_code]["col_size"])
@@ -206,7 +206,7 @@ def word_similarity(rank_method_code, lwords, hitset, rank_limit_relevance, verb
     #For each term, if accepted, get a list of the records using the term
     #calculate then relevance for each term before sorting the list of records
     for (term, table) in lwords:
-        term_recs = run_sql("""SELECT term, hitlist FROM %s WHERE term=%%s""" % methods[rank_method_code]["rnkWORD_table"], (term,))
+        term_recs = run_sql("""SELECT term, hitlist FROM %s WHERE term=%%s"""% wash_table_column_name(methods[rank_method_code]["rnkWORD_table"]), (term,))
         if term_recs: #if term exists in database, use for ranking
             term_recs = deserialize_via_marshal(term_recs[0][1])
             (recdict, rec_termcount) = calculate_record_relevance((term, int(term_recs["Gi"][1])) , term_recs, hitset, recdict, rec_termcount, verbose, quick=None)
@@ -224,7 +224,7 @@ def word_similarity(rank_method_code, lwords, hitset, rank_limit_relevance, verb
 
     if verbose > 0:
         voutput += "<br />Current number of recIDs: %s<br />" % (methods[rank_method_code]["col_size"])
-        voutput += "Number of terms: %s<br />" % run_sql("SELECT count(id) FROM %s" % methods[rank_method_code]["rnkWORD_table"])[0][0]
+        voutput += "Number of terms: %s<br />" % run_sql("SELECT count(id) FROM %s"% wash_table_column_name(methods[rank_method_code]["rnkWORD_table"]))[0][0]
         voutput += "Terms: %s<br />" % lwords
         voutput += "Prepare and pre calculate time: %s<br />" % (str(time.time() - startCreate))
         voutput += "Total time used: %s<br />" % (str(time.time() - startCreate))
@@ -313,7 +313,7 @@ def rank_method_stat(rank_method_code, reclist, lwords):
     for i in range(1, j + 1):
         voutput += "%s,Recid:%s,Score:%s<br />" % (i,reclist[len(reclist) - i][0],reclist[len(reclist) - i][1])
         for (term, table) in lwords:
-            term_recs = run_sql("""SELECT hitlist FROM %s WHERE term=%%s""" % table, (term,))
+            term_recs = run_sql("""SELECT hitlist FROM %s WHERE term=%%s"""% wash_table_column_name(table), (term,))
             if term_recs:
                 term_recs = deserialize_via_marshal(term_recs[0][0])
                 if term_recs.has_key(reclist[len(reclist) - i][0]):

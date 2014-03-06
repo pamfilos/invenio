@@ -185,7 +185,7 @@ def cli_quick_match_all_recids(options):
         tmp_date_params = tuple(tmp_date_params)
         query = 'SELECT id FROM bibrec WHERE %s' % tmp_date_query
         debug('Query: %s, param: %s' % (query, tmp_date_params))
-        recids &= intbitset(run_sql(query % tmp_date_query, tmp_date_params))
+        recids &= intbitset(run_sql(query% (tmp_date_query, tmp_date_params)))
         debug('After applying dates we obtain recids: %s' % recids)
         if not recids:
             print >> sys.stderr, 'WARNING: Time constraints for records are too strict'

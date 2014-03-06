@@ -48,7 +48,7 @@ def backup_tables(drop=False):
         run_sql('DROP TABLE bibdoc_bibdoc_backup_for_icon')
     try:
         run_sql("""CREATE TABLE bibdoc_bibdoc_backup_for_icon (KEY id_bibdoc1(id_bibdoc1),
-                KEY id_bibdoc2(id_bibdoc2)) SELECT * FROM bibdoc_bibdoc""")
+                KEY id_bibdoc2(id_bibdoc2)) SELECT * FROM bibdoc_bibdoc""")     # kwalitee: disable=sql
     except OperationalError, e:
         if not drop:
             return False

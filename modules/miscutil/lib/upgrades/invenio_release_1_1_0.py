@@ -408,12 +408,12 @@ def do_upgrade():
         """)
 
     # Insert and alter table queries
-    _run_sql_ignore("INSERT INTO sbmALLFUNCDESCR VALUES ('Set_Embargo','Set an embargo on all the documents of a given record.');")
-    _run_sql_ignore("INSERT INTO sbmFUNDESC VALUES ('Set_Embargo','date_file');")
-    _run_sql_ignore("INSERT INTO sbmFUNDESC VALUES ('Set_Embargo','date_format');")
-    _run_sql_ignore("INSERT INTO sbmFUNDESC VALUES ('User_is_Record_Owner_or_Curator','curator_role');")
-    _run_sql_ignore("INSERT INTO sbmFUNDESC VALUES ('User_is_Record_Owner_or_Curator','curator_flag');")
-    _run_sql_ignore("INSERT INTO sbmFUNDESC VALUES ('Move_Photos_to_Storage','iconformat');")
+    _run_sql_ignore("INSERT INTO sbmALLFUNCDESCR VALUES ('Set_Embargo','Set an embargo on all the documents of a given record.');")   # kwalitee: disable=sql
+    _run_sql_ignore("INSERT INTO sbmFUNDESC VALUES ('Set_Embargo','date_file');")   # kwalitee: disable=sql
+    _run_sql_ignore("INSERT INTO sbmFUNDESC VALUES ('Set_Embargo','date_format');")   # kwalitee: disable=sql
+    _run_sql_ignore("INSERT INTO sbmFUNDESC VALUES ('User_is_Record_Owner_or_Curator','curator_role');")   # kwalitee: disable=sql
+    _run_sql_ignore("INSERT INTO sbmFUNDESC VALUES ('User_is_Record_Owner_or_Curator','curator_flag');")   # kwalitee: disable=sql
+    _run_sql_ignore("INSERT INTO sbmFUNDESC VALUES ('Move_Photos_to_Storage','iconformat');")   # kwalitee: disable=sql
     _run_sql_ignore("INSERT INTO format (name, code, description, content_type, visibility) VALUES ('Podcast', 'xp', 'Sample format suitable for multimedia feeds, such as podcasts', 'application/rss+xml', 0);")
     _run_sql_ignore("ALTER TABLE accMAILCOOKIE ADD INDEX expiration (expiration);")
     _run_sql_ignore("UPDATE sbmFUNDESC SET function='Move_CKEditor_Files_to_Storage' WHERE function='Move_FCKeditor_Files_to_Storage';")
@@ -430,30 +430,30 @@ def do_upgrade():
     _run_sql_ignore("ALTER TABLE oaiREPOSITORY CHANGE setSpec setSpec varchar(255) NOT NULL default 'GLOBAL_SET';")
     _run_sql_ignore("UPDATE oaiREPOSITORY SET setSpec='GLOBAL_SET' WHERE setSpec='';")
     _run_sql_ignore("ALTER TABLE user_query_basket ADD COLUMN alert_desc TEXT DEFAULT NULL AFTER alert_name;")
-    _run_sql_ignore("INSERT INTO sbmALLFUNCDESCR VALUES ('Link_Records','Link two records toghether via MARC');")
-    _run_sql_ignore("INSERT INTO sbmALLFUNCDESCR VALUES ('Video_Processing',NULL);")
-    _run_sql_ignore("INSERT INTO sbmFUNDESC VALUES ('Link_Records','edsrn');")
-    _run_sql_ignore("INSERT INTO sbmFUNDESC VALUES ('Link_Records','edsrn2');")
-    _run_sql_ignore("INSERT INTO sbmFUNDESC VALUES ('Link_Records','directRelationship');")
-    _run_sql_ignore("INSERT INTO sbmFUNDESC VALUES ('Link_Records','reverseRelationship');")
-    _run_sql_ignore("INSERT INTO sbmFUNDESC VALUES ('Link_Records','keep_original_edsrn2');")
-    _run_sql_ignore("INSERT INTO sbmFUNDESC VALUES ('Video_Processing','aspect');")
-    _run_sql_ignore("INSERT INTO sbmFUNDESC VALUES ('Video_Processing','batch_template');")
-    _run_sql_ignore("INSERT INTO sbmFUNDESC VALUES ('Video_Processing','title');")
-    _run_sql_ignore("INSERT INTO sbmALLFUNCDESCR VALUES ('Set_RN_From_Sysno', 'Set the value of global rn variable to the report number identified by sysno (recid)');")
-    _run_sql_ignore("INSERT INTO sbmFUNDESC VALUES ('Set_RN_From_Sysno','edsrn');")
-    _run_sql_ignore("INSERT INTO sbmFUNDESC VALUES ('Set_RN_From_Sysno','rep_tags');")
-    _run_sql_ignore("INSERT INTO sbmFUNDESC VALUES ('Set_RN_From_Sysno','record_search_pattern');")
-    _run_sql_ignore("UPDATE externalcollection SET name='INSPIRE' where name='SPIRES HEP';")
-    _run_sql_ignore("INSERT INTO sbmFUNDESC VALUES ('Report_Number_Generation','initialvalue');")
-    _run_sql_ignore("INSERT INTO sbmALLFUNCDESCR VALUES ('Notify_URL','Access URL, possibly to post content');")
-    _run_sql_ignore("INSERT INTO sbmFUNDESC VALUES ('Notify_URL','url');")
-    _run_sql_ignore("INSERT INTO sbmFUNDESC VALUES ('Notify_URL','data');")
-    _run_sql_ignore("INSERT INTO sbmFUNDESC VALUES ('Notify_URL','admin_emails');")
-    _run_sql_ignore("INSERT INTO sbmFUNDESC VALUES ('Notify_URL','content_type');")
-    _run_sql_ignore("INSERT INTO sbmFUNDESC VALUES ('Notify_URL','attempt_times');")
-    _run_sql_ignore("INSERT INTO sbmFUNDESC VALUES ('Notify_URL','attempt_sleeptime');")
-    _run_sql_ignore("INSERT INTO sbmFUNDESC VALUES ('Notify_URL','user');")
+    _run_sql_ignore("INSERT INTO sbmALLFUNCDESCR VALUES ('Link_Records','Link two records toghether via MARC');")   # kwalitee: disable=sql
+    _run_sql_ignore("INSERT INTO sbmALLFUNCDESCR VALUES ('Video_Processing',NULL);")   # kwalitee: disable=sql
+    _run_sql_ignore("INSERT INTO sbmFUNDESC VALUES ('Link_Records','edsrn');")   # kwalitee: disable=sql
+    _run_sql_ignore("INSERT INTO sbmFUNDESC VALUES ('Link_Records','edsrn2');")   # kwalitee: disable=sql
+    _run_sql_ignore("INSERT INTO sbmFUNDESC VALUES ('Link_Records','directRelationship');")   # kwalitee: disable=sql
+    _run_sql_ignore("INSERT INTO sbmFUNDESC VALUES ('Link_Records','reverseRelationship');")   # kwalitee: disable=sql
+    _run_sql_ignore("INSERT INTO sbmFUNDESC VALUES ('Link_Records','keep_original_edsrn2');")   # kwalitee: disable=sql
+    _run_sql_ignore("INSERT INTO sbmFUNDESC VALUES ('Video_Processing','aspect');")   # kwalitee: disable=sql
+    _run_sql_ignore("INSERT INTO sbmFUNDESC VALUES ('Video_Processing','batch_template');")   # kwalitee: disable=sql
+    _run_sql_ignore("INSERT INTO sbmFUNDESC VALUES ('Video_Processing','title');")   # kwalitee: disable=sql
+    _run_sql_ignore("INSERT INTO sbmALLFUNCDESCR VALUES ('Set_RN_From_Sysno', 'Set the value of global rn variable to the report number identified by sysno (recid)');")   # kwalitee: disable=sql
+    _run_sql_ignore("INSERT INTO sbmFUNDESC VALUES ('Set_RN_From_Sysno','edsrn');")   # kwalitee: disable=sql
+    _run_sql_ignore("INSERT INTO sbmFUNDESC VALUES ('Set_RN_From_Sysno','rep_tags');")   # kwalitee: disable=sql
+    _run_sql_ignore("INSERT INTO sbmFUNDESC VALUES ('Set_RN_From_Sysno','record_search_pattern');")   # kwalitee: disable=sql
+    _run_sql_ignore("UPDATE externalcollection SET name='INSPIRE' where name='SPIRES HEP';")   # kwalitee: disable=sql
+    _run_sql_ignore("INSERT INTO sbmFUNDESC VALUES ('Report_Number_Generation','initialvalue');")   # kwalitee: disable=sql
+    _run_sql_ignore("INSERT INTO sbmALLFUNCDESCR VALUES ('Notify_URL','Access URL, possibly to post content');")   # kwalitee: disable=sql
+    _run_sql_ignore("INSERT INTO sbmFUNDESC VALUES ('Notify_URL','url');")   # kwalitee: disable=sql
+    _run_sql_ignore("INSERT INTO sbmFUNDESC VALUES ('Notify_URL','data');")   # kwalitee: disable=sql
+    _run_sql_ignore("INSERT INTO sbmFUNDESC VALUES ('Notify_URL','admin_emails');")   # kwalitee: disable=sql
+    _run_sql_ignore("INSERT INTO sbmFUNDESC VALUES ('Notify_URL','content_type');")   # kwalitee: disable=sql
+    _run_sql_ignore("INSERT INTO sbmFUNDESC VALUES ('Notify_URL','attempt_times');")   # kwalitee: disable=sql
+    _run_sql_ignore("INSERT INTO sbmFUNDESC VALUES ('Notify_URL','attempt_sleeptime');")   # kwalitee: disable=sql
+    _run_sql_ignore("INSERT INTO sbmFUNDESC VALUES ('Notify_URL','user');")   # kwalitee: disable=sql
     _run_sql_ignore("ALTER TABLE bibfmt DROP COLUMN id;")
     _run_sql_ignore("ALTER TABLE bibfmt ADD PRIMARY KEY (id_bibrec, format);")
     _run_sql_ignore("ALTER TABLE bibfmt DROP KEY id_bibrec;")
@@ -525,7 +525,7 @@ def _create_table(tables, tblname, ddl_stmt):
     if tblname not in tables:
         run_sql(ddl_stmt)
     else:
-        res = run_sql('SHOW CREATE TABLE %s' % tblname)
+        res = run_sql('SHOW CREATE TABLE %s'% wash_table_column_name(tblname))
         your_ddl = res[0][1]
         warnings.warn("Table '%s' already exists but was not supposed to."
                " Please manually compare the CREATE-statment used to create"
@@ -539,9 +539,9 @@ def _get_table_info(tblname):
     """ Retrieve fields and indexes in table. """
     try:
         tblinfo = {'fields': {}, 'indexes': {}}
-        for f in run_sql("SHOW FIELDS FROM %s" % tblname):
+        for f in run_sql("SHOW FIELDS FROM %s"% wash_table_column_name(tblname)):
             tblinfo['fields'][f[0]] = f[1:]
-        for f in run_sql("SHOW INDEXES FROM %s" % tblname):
+        for f in run_sql("SHOW INDEXES FROM %s"% wash_table_column_name(tblname)):
             tblinfo['indexes'][f[2]] = f
         return tblinfo
     except Exception:

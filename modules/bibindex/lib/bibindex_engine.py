@@ -1716,6 +1716,142 @@ class WordTable(AbstractIndexTable):
             raise StandardError(error_message)
 
 
+    def remove_dependent_index(self, id_dependent):
+        """Removes terms found in dependent index from virtual index.
+           Function finds words for removal and then removes them from
+           forward and reversed tables term by term.
+>>>>>>> master - kwalitee sql fix
+           @param id_dependent: id of an index which we want to remove from this
+                                virtual index
+        """
+        if not self.is_virtual:
+            write_message("Index is not virtual...")
+            return
+
+        global chunksize
+        terms_current_counter = 0
+        terms_done = 0
+        terms_to_go = 0
+
+        for_full_removal, for_partial_removal = self.get_words_to_remove(id_dependent, misc_lookup=False)
+        query = """SELECT t.term, m.hitlist FROM %s%02dF as t INNER JOIN %s%02dF as m
+                   ON t.term=m.term""" % (self.tablename[:-3], self.index_id, self.tablename[:-3], id_dependent)
+        terms_and_hitlists = dict(run_sql(query))
+        terms_to_go = len(for_full_removal) + len(for_partial_removal)
+        task_sleep_now_if_required()
+        #full removal
+        for term in for_full_removal:
+            terms_current_counter += 1
+            hitlist = intbitset(terms_and_hitlists[term])
+            for recID in hitlist:
+                self.remove_single_word_reversed_table(term, recID)
+            self.remove_single_word_forward_table(term)
+            if terms_current_counter % chunksize == 0:
+                terms_done += terms_current_counter
+                terms_current_counter = 0
+                write_message("removed %s/%s terms..." % (terms_done, terms_to_go))
+                task_sleep_now_if_required()
+        terms_done += terms_current_counter
+        terms_current_counter = 0
+        #partial removal
+        for term, indexes in for_partial_removal.iteritems():
+            self.value = {}
+            terms_current_counter += 1
+            hitlist = intbitset(terms_and_hitlists[term])
+            if len(indexes) > 0:
+                hitlist -= self._find_common_hitlist(term, id_dependent, indexes)
+            for recID in hitlist:
+                self.remove_single_word_reversed_table(term, recID)
+                if self.value.has_key(term):
+                    self.value[term][recID] = -1
+                else:
+                    self.value[term] = {recID: -1}
+            if self.value:
+                self.put_word_into_db(term, self.index_id)
+            if terms_current_counter % chunksize == 0:
+                terms_done += terms_current_counter
+                terms_current_counter = 0
+                write_message("removed %s/%s terms..." % (terms_done, terms_to_go))
+                task_sleep_now_if_required()
+
+
+    def remove_single_word_forward_table(self, word):
+        """Immediately and irreversibly removes a word from forward table"""
+        run_sql("""DELETE FROM %s WHERE term=%%s""" % self.tablename, (word, )) # kwalitee: disable=sql
+
+    def remove_single_word_reversed_table(self, word, recID):
+        """Removes single word from temlist for given recID"""
+        old_set = run_sql("""SELECT termlist FROM %sR WHERE id_bibrec=%%s""" %  (wash_table_column_name(self.tablename[:-1]),), (recID, )) # kwalitee: disable=sql
+        new_set = []
+        if old_set:
+            new_set = deserialize_via_marshal(old_set[0][0])
+            if word in new_set:
+                new_set.remove(word)
+        if new_set:
+            run_sql("""UPDATE %sR SET termlist=%%s
+                       WHERE id_bibrec=%%s AND
+                       type='CURRENT'""" %  \
+                    (wash_table_column_name(self.tablename[:-1]),), (serialize_via_marshal(new_set), recID))
+
+    def _find_common_hitlist(self, term, id_dependent, indexes):
+        """Checks 'indexes' for records that have 'term' indexed
+           and returns intersection between found records
+           and records that have a 'term' inside index
+           defined by id_dependent parameter"""
+        query = """SELECT m.hitlist FROM idxWORD%02dF as t INNER JOIN idxWORD%02dF as m
+                   ON t.term=m.term WHERE t.term='%s'"""
+        common_hitlist = intbitset([])
+        for _id in indexes:
+            res = run_sql(query% (id_dependent, _id, term))
+            if res:
+                common_hitlist |= intbitset(res[0][0])
+        return common_hitlist
+
+    def get_words_to_remove(self, id_dependent, misc_lookup=False):
+        """Finds words in dependent index which should be removed from virtual index.
+           Example:
+           Virtual index 'A' consists of 'B' and 'C' dependent indexes and we want to
+           remove 'B' from virtual index 'A'.
+           First we need to check if 'B' and 'C' have common words. If they have
+           we need to be careful not to remove common words from 'A', because we want
+           to remove only words from 'B'.
+           Then we need to check common words for 'A' and 'B'. These are potential words
+           for removal. We need to substract common words for 'B' and 'C' from common words
+           for 'A' and 'B' to be sure that correct words are removed.
+           @return: (list, dict), list contains terms/words for full removal, dict
+                    contains words for partial removal together with ids of indexes in which
+                    given term/word also exists
+        """
+
+        query = """SELECT t.term FROM %s%02dF as t INNER JOIN %s%02dF as m
+                   ON t.term=m.term"""
+        dependent_indexes = get_virtual_index_building_blocks(self.index_id)
+        other_ids = list(dependent_indexes and zip(*dependent_indexes)[0] or [])
+        if id_dependent in other_ids:
+            other_ids.remove(id_dependent)
+        if not misc_lookup:
+            misc_id = get_index_id_from_index_name('miscellaneous')
+            if misc_id in other_ids:
+                other_ids.remove(misc_id)
+
+        #intersections between dependent indexes
+        left_in_other_indexes = {}
+        for _id in other_ids:
+            intersection = zip(*run_sql(query % (self.tablename[:-3], id_dependent, self.tablename[:-3], _id))) # kwalitee: disable=sql
+            terms = bool(intersection) and intersection[0] or []
+            for term in terms:
+                if left_in_other_indexes.has_key(term):
+                    left_in_other_indexes[term].append(_id)
+                else:
+                    left_in_other_indexes[term] = [_id]
+
+        #intersection between virtual index and index we want to remove
+        main_intersection = zip(*run_sql(query % (self.tablename[:-3], self.index_id, self.tablename[:-3], id_dependent))) # kwalitee: disable=sql
+        terms_main = set(bool(main_intersection) and main_intersection[0] or [])
+        return list(terms_main - set(left_in_other_indexes.keys())), left_in_other_indexes
+
+
+>>>>>>> master - kwalitee sql fix
 def main():
     """Main that construct all the bibtask."""
     task_init(authorization_action='runbibindex',

@@ -44,7 +44,7 @@ from invenio.bibauthorid_name_utils import create_normalized_name
 from invenio.bibauthorid_general_utils import bibauthor_print
 from invenio.bibauthorid_general_utils import update_status \
                                     , update_status_final
-from invenio.dbquery import run_sql
+from invenio.dbquery import run_sql, wash_table_column_name
 from invenio import bibtask
 
 from msgpack import packb as serialize
@@ -98,10 +98,9 @@ def add_signature(sig, name, pid, flag=0, user_level=0):
         name = get_name_by_bibref(sig)
         name = create_normalized_name(split_name_parts(name))
 
-    run_sql("""insert into aidPERSONIDPAPERS
-               (personid, bibref_table, bibref_value, bibrec, name, flag, lcul)
-               values (%s, %s, %s, %s, %s, %s, %s)""",
-               (pid, str(sig[0]), sig[1], sig[2], name, flag, user_level) )
+    run_sql("""insert into aidPERSONIDPAPERS """+ \
+            """(personid, bibref_table, bibref_value, bibrec, name, flag, lcul) values (%s, %s, %s, %s, %s, %s, %s)""",\
+            (pid, str(sig[0]), sig[1], sig[2], name, flag, user_level)  )    # kwalitee: disable=sql
 
 
 def move_signature(sig, pid, force_claimed=False, set_unclaimed=False):
@@ -1530,9 +1529,9 @@ def add_author_data(pid, tag, value, opt1=None, opt2=None, opt3=None):   ### set
     @param opt3: opt3
     @type opt3: str
     '''
-    run_sql("""insert into aidPERSONIDDATA
-               (`personid`, `tag`, `data`, `opt1`, `opt2`, `opt3`)
-               values (%s, %s, %s, %s, %s, %s)""",
+    run_sql("""insert into aidPERSONIDDATA """ + \
+               """(`personid`, `tag`, `data`, `opt1`, `opt2`, `opt3`)
+               values (%s, %s, %s, %s, %s, %s)""",\
                (pid, tag, value, opt1, opt2, opt3) )
 
 
@@ -1623,9 +1622,8 @@ def add_arxiv_papers_to_author(arxiv_papers, pid):
 
     arxiv_papers = serialize(arxiv_papers)
 
-    run_sql("""insert into aidPERSONIDDATA
-               (`personid`, `tag`, `datablob`)
-               values (%s, %s, %s)""",
+    run_sql("""insert into aidPERSONIDDATA """ +\
+               """(`personid`, `tag`, `datablob`) values (%s, %s, %s)""",\
                (pid, 'arxiv_papers', arxiv_papers) )
 
 
@@ -1653,9 +1651,8 @@ def _add_external_id_to_author(pid, ext_sys, ext_id):   ### add_personID_externa
     @param ext_id: external identifier
     @type ext_id: str
     '''
-    run_sql("""insert into aidPERSONIDDATA
-               (personid, tag, data)
-               values (%s, %s, %s)""",
+    run_sql("""insert into aidPERSONIDDATA """ +\
+               """(personid, tag, data) values (%s, %s, %s)""",\
                (pid, 'extid:%s' % ext_sys, ext_id) )
 
 
@@ -1719,9 +1716,8 @@ def update_request_ticket_for_author(pid, ticket_dict, tid=None):   ### update_r
     if request_tickets_exist:
         remove_request_ticket_for_author(pid)
 
-    run_sql("""insert into aidPERSONIDDATA
-               (personid, tag, datablob, opt1)
-               values (%s, %s, %s, %s)""",
+    run_sql("""insert into aidPERSONIDDATA """ +\
+               """(personid, tag, datablob, opt1)  values (%s, %s, %s, %s)""",\
                (pid, 'request_tickets', request_tickets, request_tickets_num) )
 
 
@@ -1736,9 +1732,8 @@ def remove_request_ticket_for_author(pid, tid=None):   ### delete_request_ticket
     @type tid: int
     '''
     def remove_all_request_tickets_for_author(pid):
-        run_sql("""delete from aidPERSONIDDATA
-                   where personid=%s
-                   and tag=%s""",
+        run_sql("""delete from aidPERSONIDDATA """ +\
+                   """where personid=%s and tag=%s""",\
                    (pid, 'request_tickets') )
 
     if tid is None:
@@ -1762,9 +1757,8 @@ def remove_request_ticket_for_author(pid, tid=None):   ### delete_request_ticket
     request_tickets_num = len(request_tickets)
     request_tickets = serialize(request_tickets)
 
-    run_sql("""insert into aidPERSONIDDATA
-               (personid, tag, datablob, opt1)
-               values (%s, %s, %s, %s)""",
+    run_sql("""insert into aidPERSONIDDATA """ +\
+               """(personid, tag, datablob, opt1)  values (%s, %s, %s, %s)""",\
                (pid, 'request_tickets', request_tickets, request_tickets_num) )
 
 
@@ -1787,9 +1781,8 @@ def modify_canonical_name_of_authors(pids_newcnames=None):   ### change_personID
                    and (personid=%s or data=%s)""",
                    ('canonical_name', pid, newcname) )
 
-        run_sql("""insert into aidPERSONIDDATA
-                   (personid, tag, data)
-                   values (%s, %s, %s)""",
+        run_sql("""insert into aidPERSONIDDATA """ +\
+                   """(personid, tag, data)  values (%s, %s, %s)""",\
                    (pid, 'canonical_name', newcname) )
 
     update_status_final("Changing canonical names finished.")
@@ -2366,9 +2359,8 @@ def update_canonical_names_of_authors(pids=None, overwrite=False, suggested='', 
                     canonical_name = current_try
                     break
 
-            run_sql("""insert into aidPERSONIDDATA
-                       (personid, tag, data)
-                       values (%s, %s, %s)""",
+            run_sql("""insert into aidPERSONIDDATA """ +\
+                       """(personid, tag, data)  values (%s, %s, %s)""",\
                        (pid, 'canonical_name', canonical_name))
 
     update_status_final("Updating canonical_names finished.")
@@ -2931,9 +2923,8 @@ def save_cluster(named_cluster):
     name, cluster = named_cluster
     for sig in cluster.bibs:
         table, ref, rec = sig
-        run_sql("""insert into aidRESULTS
-                   (personid, bibref_table, bibref_value, bibrec)
-                   values (%s, %s, %s, %s)""",
+        run_sql("""insert into aidRESULTS """ +\
+                   """(personid, bibref_table, bibref_value, bibrec)  values (%s, %s, %s, %s)""",\
                    (name, str(table), ref, rec) )
 
 
@@ -3063,14 +3054,13 @@ def insert_user_log(userinfo, pid, action, tag, value, comment='', transactionid
     @rtype: int
     '''
     if timestamp is None:
-        run_sql("""insert into aidUSERINPUTLOG
-                   (transactionid, timestamp, userinfo, userid, personid, action, tag, value, comment)
+        run_sql("""insert into aidUSERINPUTLOG  """ +    # kwalitee: disable=sql
+                   """(transactionid, timestamp, userinfo, userid, personid, action, tag, value, comment)
                    values (%s, now(), %s, %s, %s, %s, %s, %s, %s)""",
                    (transactionid, userinfo, userid, pid, action, tag, value, comment) )
     else:
-        run_sql("""insert into aidUSERINPUTLOG
-                   (transactionid, timestamp, userinfo, userid, personid, action, tag, value, comment)
-                   values (%s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+        run_sql("""insert into aidUSERINPUTLOG """ +\
+                   """(transactionid, timestamp, userinfo, userid, personid, action, tag, value, comment) values (%s, %s, %s, %s, %s, %s, %s, %s, %s)""",\
                    (transactionid, timestamp, userinfo, userid, pid, action, tag, value, comment) )
 
     return transactionid
@@ -3157,9 +3147,8 @@ def set_dense_index_ready():
     '''
     Sets the search engine dense index ready to use.
     '''
-    run_sql("""insert into aidDENSEINDEX
-               (name_id, person_name, personids)
-               values (%s, %s, %s)""",
+    run_sql("""insert into aidDENSEINDEX """ +\
+               """(name_id, person_name, personids)  values (%s, %s, %s)""",\
                (-1, '', '') )
 
 
@@ -3167,9 +3156,8 @@ def set_inverted_lists_ready():
     '''
     Sets the search engine inverted lists ready to use.
     '''
-    run_sql("""insert into aidINVERTEDLISTS
-               (qgram, inverted_list, list_cardinality)
-               values (%s,%s,%s)""",
+    run_sql("""insert into aidINVERTEDLISTS """ +\
+               """(qgram, inverted_list, list_cardinality) values (%s,%s,%s)""",\
                ('!'*bconfig.QGRAM_LEN, '', 0) )
 
 # ********** getters **********#
@@ -3817,7 +3805,7 @@ def _truncate_table(table_name):
     @param table_name: name of the table to truncate
     @type table_name: str
     '''
-    run_sql("""truncate %s""" % table_name)
+    run_sql("""truncate %s"""% (wash_table_column_name(table_name),))
 
 
 def flush_data_to_db(table_name, column_names, args):   ### flush_data

@@ -579,7 +579,7 @@ def get_rnk_code(rnkID):
     rnkID - id from rnkMETHOD"""
 
     try:
-        res = run_sql("SELECT name FROM rnkMETHOD where id=%s" % (rnkID))
+        res = run_sql("SELECT name FROM rnkMETHOD where id=%s", (rnkID,))
         return res
     except StandardError, e:
         return ()
@@ -590,7 +590,7 @@ def get_rnk(rnkID=''):
 
     try:
         if rnkID:
-            res = run_sql("SELECT id,name,DATE_FORMAT(last_updated, '%%Y-%%m-%%d %%H:%%i:%%s') from rnkMETHOD WHERE id=%s" % rnkID)
+            res = run_sql("SELECT id,name,DATE_FORMAT(last_updated, '%%Y-%%m-%%d %%H:%%i:%%s') from rnkMETHOD WHERE id=%s", (rnkID,))
         else:
             res = run_sql("SELECT id,name,DATE_FORMAT(last_updated, '%%Y-%%m-%%d %%H:%%i:%%s') from rnkMETHOD")
         return res
@@ -602,7 +602,7 @@ def get_translations(rnkID):
     rnkID - the id of the rankmethod from rnkMETHOD """
 
     try:
-        res = run_sql("SELECT ln, type, value FROM rnkMETHODNAME where id_rnkMETHOD=%s ORDER BY ln,type" % (rnkID))
+        res = run_sql("SELECT ln, type, value FROM rnkMETHODNAME where id_rnkMETHOD=%s ORDER BY ln,type", (rnkID,))
         return res
     except StandardError, e:
         return ()
@@ -627,7 +627,7 @@ def get_rnk_col(rnkID, ln=CFG_SITE_LANG):
     rnkID - id from rnkMETHOD"""
 
     try:
-        res1 = dict(run_sql("SELECT id_collection, '' FROM collection_rnkMETHOD WHERE id_rnkMETHOD=%s" % rnkID))
+        res1 = dict(run_sql("SELECT id_collection, '' FROM collection_rnkMETHOD WHERE id_rnkMETHOD=%s", (rnkID,)))
         res2 = get_def_name('', "collection")
         result = filter(lambda x: res1.has_key(x[0]), res2)
         return result
@@ -650,7 +650,7 @@ def attach_col_rnk(rnkID, colID):
     colID - id of collection, as in collection table """
 
     try:
-        res = run_sql("INSERT INTO collection_rnkMETHOD(id_collection, id_rnkMETHOD) values (%s,%s)" % (colID, rnkID))
+        res = run_sql("INSERT INTO collection_rnkMETHOD(id_collection, id_rnkMETHOD) values (%s,%s)", (colID, rnkID))
         return (1, "")
     except StandardError, e:
         return (0, e)
@@ -661,7 +661,7 @@ def detach_col_rnk(rnkID, colID):
     colID - id of collection, as in collection table """
 
     try:
-        res = run_sql("DELETE FROM collection_rnkMETHOD WHERE id_collection=%s AND id_rnkMETHOD=%s" % (colID, rnkID))
+        res = run_sql("DELETE FROM collection_rnkMETHOD WHERE id_collection=%s AND id_rnkMETHOD=%s", (colID, rnkID))
         return (1, "")
     except StandardError, e:
         return (0, e)
@@ -671,13 +671,13 @@ def delete_rnk(rnkID, table=""):
     rnkID - delete all data in the tables associated with ranking and this id """
 
     try:
-        res = run_sql("DELETE FROM rnkMETHOD WHERE id=%s" % rnkID)
-        res = run_sql("DELETE FROM rnkMETHODNAME WHERE id_rnkMETHOD=%s" % rnkID)
-        res = run_sql("DELETE FROM collection_rnkMETHOD WHERE id_rnkMETHOD=%s" % rnkID)
-        res = run_sql("DELETE FROM rnkMETHODDATA WHERE id_rnkMETHOD=%s" % rnkID)
+        res = run_sql("DELETE FROM rnkMETHOD WHERE id=%s", (rnkID,))
+        res = run_sql("DELETE FROM rnkMETHODNAME WHERE id_rnkMETHOD=%s", (rnkID,))
+        res = run_sql("DELETE FROM collection_rnkMETHOD WHERE id_rnkMETHOD=%s", (rnkID,))
+        res = run_sql("DELETE FROM rnkMETHODDATA WHERE id_rnkMETHOD=%s", (rnkID, ))
         if table:
-            res = run_sql("truncate %s" % table)
-            res = run_sql("truncate %sR" % table[:-1])
+            res = run_sql("truncate %s"% wash_table_colmn_name(table))
+            res = run_sql("truncate %sR"% wash_table_column_name(table[:-1]))
         return (1, "")
     except StandardError, e:
         return (0, e)
@@ -928,9 +928,9 @@ def get_def_name(ID, table):
 
     try:
         if ID:
-            res = run_sql("SELECT id,name FROM %s where id=%s" % (table, ID))
+            res = run_sql("SELECT id,name FROM %s where id=%%s"% wash_table_column_name(table), (ID,))
         else:
-            res = run_sql("SELECT id,name FROM %s" % table)
+            res = run_sql("SELECT id,name FROM %s"% wash_table_column_name(table))
         res = list(res)
         res.sort(compare_on_val)
         return res
@@ -948,21 +948,26 @@ def get_i8n_name(ID, ln, rtype, table):
     try:
         res = ""
         if ID:
-            res = run_sql("SELECT id_%s,value FROM %s%s where type='%s' and ln='%s' and id_%s=%s" % (table, table, name, rtype,ln, table, ID))
+            res = run_sql("SELECT id_%s,value FROM %s%s where type='%s' and ln='%s' and id_%s=%s"% wash_table_column_name(table), # kwalitee: disable=sql
+                wash_table_column_name(table), name, rtype,ln, wash_table_column_name(table), ID)
         else:
-            res = run_sql("SELECT id_%s,value FROM %s%s where type='%s' and ln='%s'" % (table, table, name,  rtype,ln))
+            res = run_sql("SELECT id_%s,value FROM %s%s where type='%s' and ln='%s'"% (wash_table_column_name(table),   # kwalitee: disable=sql
+                wash_table_column_name(table), name,  rtype,ln))
         if ln != CFG_SITE_LANG:
             if ID:
-                res1 = run_sql("SELECT id_%s,value FROM %s%s WHERE ln='%s' and type='%s' and id_%s=%s"  % (table, table, name, CFG_SITE_LANG, rtype, table, ID))
+                res1 = run_sql("SELECT id_%s,value FROM %s%s WHERE ln='%s' and type='%s' and id_%s=%s"%     # kwalitee: disable=sql
+                        (wash_table_column_name(table), wash_table_column_name(table), name, CFG_SITE_LANG, rtype,
+                            wash_table_column_name(table), ID))
             else:
-                res1 = run_sql("SELECT id_%s,value FROM %s%s WHERE ln='%s' and type='%s'"  % (table, table, name, CFG_SITE_LANG, rtype))
+                res1 = run_sql("SELECT id_%s,value FROM %s%s WHERE ln='%s' and type='%s'"% (wash_table_column_name(table),  # kwalitee: disable=sql
+                    wash_table_column_name(table), name, CFG_SITE_LANG, rtype))
             res2 = dict(res)
             result = filter(lambda x: not res2.has_key(x[0]), res1)
             res = res + result
         if ID:
-            res1 = run_sql("SELECT id,name FROM %s where id=%s" % (table, ID))
+            res1 = run_sql("SELECT id,name FROM %s where id=%%s"% wash_table_column_name(table),(ID,))
         else:
-            res1 = run_sql("SELECT id,name FROM %s" % table)
+            res1 = run_sql("SELECT id,name FROM %s"% wash_table_column_name(table))
         res2 = dict(res)
         result = filter(lambda x: not res2.has_key(x[0]), res1)
         res = res + result
@@ -989,7 +994,8 @@ def get_name(ID, ln, rtype, table, id_column=None):
         id_column = wash_table_column_name(id_column)
 
     try:
-        res = run_sql("SELECT value FROM %s%s WHERE type='%s' and ln='%s' and %s=%s" % (table, name, rtype, ln, (id_column or 'id_%s' % wash_table_column_name(table)), ID))
+        res = run_sql("SELECT value FROM %s%s WHERE type='%s' and ln='%s' and %s=%s"% (wash_table_column_name(table),   # kwalitee: disable=sql
+            wash_table_column_name(name), rtype, ln, (id_column or 'id_%s' % wash_table_column_name(table)), ID))
         return res
     except StandardError, e:
         return ()
@@ -1013,19 +1019,19 @@ def modify_translations(ID, langs, sel_type, trans, table, id_column=None):
         id_column = wash_table_column_name(id_column)
     try:
         for nr in range(0,len(langs)):
-            res = run_sql("SELECT value FROM %s%s WHERE %s=%%s AND type=%%s AND ln=%%s" % (table, name, id_column),
-                          (ID, sel_type, langs[nr][0]))
+            res = run_sql("SELECT value FROM %s%s WHERE %s=%%s AND type=%%s AND ln=%%s"% (wash_table_column_name(table), name,
+                id_column),(ID, sel_type, langs[nr][0]))
             if res:
                 if trans[nr]:
-                    res = run_sql("UPDATE %s%s SET value=%%s WHERE %s=%%s AND type=%%s AND ln=%%s" % (table, name, id_column),
-                                  (trans[nr], ID, sel_type, langs[nr][0]))
+                    res = run_sql("UPDATE %s%s SET value=%%s WHERE %s=%%s AND type=%%s AND ln=%%s"% (wash_table_column_name(table),
+                        name, id_column), (trans[nr], ID, sel_type, langs[nr][0]))
                 else:
-                    res = run_sql("DELETE FROM %s%s WHERE %s=%%s AND type=%%s AND ln=%%s" % (table, name, id_column),
-                                  (ID, sel_type, langs[nr][0]))
+                    res = run_sql("DELETE FROM %s%s WHERE %s=%%s AND type=%%s AND ln=%%s"% (wash_table_column_name(table), name,
+                        id_column), (ID, sel_type, langs[nr][0]))
             else:
                 if trans[nr]:
-                    res = run_sql("INSERT INTO %s%s (%s, type, ln, value) VALUES (%%s,%%s,%%s,%%s)" % (table, name, id_column),
-                                  (ID, sel_type, langs[nr][0], trans[nr]))
+                    res = run_sql("INSERT INTO %s%s (%s, type, ln, value) VALUES (%%s,%%s,%%s,%%s)"% (wash_table_column_name(table),
+                        name, id_column),(ID, sel_type, langs[nr][0], trans[nr]))
         return (1, "")
     except StandardError, e:
         return (0, e)

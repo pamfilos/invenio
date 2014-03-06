@@ -2455,8 +2455,7 @@ def search_unit_in_bibwords(word, f, decompress=zlib.decompress, wl=0):
             except ValueError:
                 pass
         try:
-            res = run_sql_with_limit("SELECT term,hitlist FROM %s WHERE term BETWEEN %%s AND %%s" % bibwordsX,
-                          (word0_washed, word1_washed), wildcard_limit=wl)
+            res = run_sql_with_limit("SELECT term,hitlist FROM %s WHERE term BETWEEN %%s AND %%s" % bibwordsX,(word0_washed, word1_washed), wildcard_limit=wl) # kwalitee: disable=sql
         except InvenioDbQueryWildcardLimitError, excp:
             res = excp.res
             limit_reached = 1 # set the limit reached flag to true
@@ -2475,14 +2474,12 @@ def search_unit_in_bibwords(word, f, decompress=zlib.decompress, wl=0):
                 res = ()
             else:
                 try:
-                    res = run_sql_with_limit("SELECT term,hitlist FROM %s WHERE term LIKE %%s" % bibwordsX,
-                                  (wash_index_term(word),), wildcard_limit = wl)
+                    res = run_sql_with_limit("SELECT term,hitlist FROM %s WHERE term LIKE %%s" % bibwordsX, (wash_index_term(word),), wildcard_limit = wl) # kwalitee: disable=sql
                 except InvenioDbQueryWildcardLimitError, excp:
                     res = excp.res
                     limit_reached = 1 # set the limit reached flag to true
         else:
-            res = run_sql("SELECT term,hitlist FROM %s WHERE term=%%s" % bibwordsX,
-                          (wash_index_term(word),))
+            res = run_sql("SELECT term,hitlist FROM %s WHERE term=%%s" % bibwordsX, (wash_index_term(word),))   # kwalitee: disable=sql
     # fill the result set:
     for word, hitlist in res:
         hitset_bibwrd = intbitset(hitlist)
@@ -2667,13 +2664,12 @@ def search_unit_in_idxphrases(p, f, search_type, wl=0):
     # perform search:
     if use_query_limit:
         try:
-            res = run_sql_with_limit("SELECT term,hitlist FROM %s WHERE term %s" % (idxphraseX, query_addons),
-                      query_params, wildcard_limit=wl)
+            res = run_sql_with_limit("SELECT term,hitlist FROM %s WHERE term %s" % (idxphraseX, query_addons), query_params, wildcard_limit=wl)   # kwalitee: disable=sql
         except InvenioDbQueryWildcardLimitError, excp:
             res = excp.res
             limit_reached = 1 # set the limit reached flag to true
     else:
-        res = run_sql("SELECT term,hitlist FROM %s WHERE term %s" % (idxphraseX, query_addons), query_params)
+        res = run_sql("SELECT term,hitlist FROM %s WHERE term %s" % (idxphraseX, query_addons), query_params)   # kwalitee: disable=sql
     # fill the result set:
     for dummy_word, hitlist in res:
         hitset_bibphrase = intbitset(hitlist)
@@ -2750,14 +2746,12 @@ def search_unit_in_bibxxx(p, f, type, wl=0):
                     return intbitset()
             if use_query_limit:
                 try:
-                    res = run_sql_with_limit("SELECT id FROM bibrec WHERE id %s" % query_addons,
-                              query_params, wildcard_limit=wl)
+                    res = run_sql_with_limit("SELECT id FROM bibrec WHERE id %s" % query_addons, query_params, wildcard_limit=wl)   # kwalitee: disable=sql
                 except InvenioDbQueryWildcardLimitError, excp:
                     res = excp.res
                     limit_reached = 1 # set the limit reached flag to true
             else:
-                res = run_sql("SELECT id FROM bibrec WHERE id %s" % query_addons,
-                              query_params)
+                res = run_sql("SELECT id FROM bibrec WHERE id %s"% query_addons, query_params) # kwalitee: disable=sql
         else:
             query = "SELECT bibx.id_bibrec FROM %s AS bx LEFT JOIN %s AS bibx ON bx.id=bibx.id_bibxxx WHERE bx.value %s" % \
                     (bx, bibx, query_addons)
@@ -2835,11 +2829,9 @@ def search_unit_in_bibrec(datetext1, datetext2, search_type='c'):
         datetext2 = parts[1]
 
     if datetext1 == datetext2:
-        res = run_sql("SELECT id FROM bibrec WHERE %s LIKE %%s" % (search_type,),
-                      (datetext1 + '%',))
+        res = run_sql("SELECT id FROM bibrec WHERE %s LIKE %%s" % (search_type,), (datetext1 + '%',))   # kwalitee: disable=sql
     else:
-        res = run_sql("SELECT id FROM bibrec WHERE %s>=%%s AND %s<=%%s" % (search_type, search_type),
-                      (datetext1, datetext2))
+        res = run_sql("SELECT id FROM bibrec WHERE %s>=%%s AND %s<=%%s" % (search_type, search_type), (datetext1, datetext2))   # kwalitee: disable=sql
     for row in res:
         hitset += row[0]
     return hitset
@@ -3273,16 +3265,14 @@ def get_nearest_terms_in_bibwords(p, f, n_below, n_above):
         else:
             return nearest_words
     # firstly try to get `n' closest words above `p':
-    res = run_sql("SELECT term FROM %s WHERE term<%%s ORDER BY term DESC LIMIT %%s" % bibwordsX,
-                  (p, n_above))
+    res = run_sql("SELECT term FROM %s WHERE term<%%s ORDER BY term DESC LIMIT %%s"% wash_table_column_name(bibwordsX),(p, n_above))
     for row in res:
         nearest_words.append(row[0])
     nearest_words.reverse()
     # secondly insert given word `p':
     nearest_words.append(p)
     # finally try to get `n' closest words below `p':
-    res = run_sql("SELECT term FROM %s WHERE term>%%s ORDER BY term ASC LIMIT %%s" % bibwordsX,
-                  (p, n_below))
+    res = run_sql("SELECT term FROM %s WHERE term>%%s ORDER BY term ASC LIMIT %%s"% wash_table_column_name(bibwordsX),(p, n_below))
     for row in res:
         nearest_words.append(row[0])
     return nearest_words
@@ -3295,11 +3285,11 @@ def get_nearest_terms_in_idxphrase(p, index_id, n_below, n_above):
     if CFG_INSPIRE_SITE and index_id in (3, 15): # FIXME: workaround due to new fuzzy index
         return [p]
     idxphraseX = "idxPHRASE%02dF" % index_id
-    res_above = run_sql("SELECT term FROM %s WHERE term<%%s ORDER BY term DESC LIMIT %%s" % idxphraseX, (p, n_above))
+    res_above = run_sql("SELECT term FROM %s WHERE term<%%s ORDER BY term DESC LIMIT %%s"%  wash_table_column_name(idxphraseX), (p, n_above))
     res_above = [x[0] for x in res_above]
     res_above.reverse()
 
-    res_below = run_sql("SELECT term FROM %s WHERE term>=%%s ORDER BY term ASC LIMIT %%s" % idxphraseX, (p, n_below))
+    res_below = run_sql("SELECT term FROM %s WHERE term>=%%s ORDER BY term ASC LIMIT %%s"%  wash_table_column_name(idxphraseX), (p, n_below))
     res_below = [x[0] for x in res_below]
 
     return res_above + res_below
@@ -3310,11 +3300,11 @@ def get_nearest_terms_in_idxphrase_with_collection(p, index_id, n_below, n_above
        considering the collection (intbitset).
        Return list of [(phrase1, hitset), (phrase2, hitset), ... , (phrase_n, hitset)]."""
     idxphraseX = "idxPHRASE%02dF" % index_id
-    res_above = run_sql("SELECT term,hitlist FROM %s WHERE term<%%s ORDER BY term DESC LIMIT %%s" % idxphraseX, (p, n_above * 3))
+    res_above = run_sql("SELECT term,hitlist FROM %s WHERE term<%%s ORDER BY term DESC LIMIT %%s"%  wash_table_column_name(idxphraseX), (p, n_above * 3))
     res_above = [(term, intbitset(hitlist) & collection) for term, hitlist in res_above]
     res_above = [(term, len(hitlist)) for term, hitlist in res_above if hitlist]
 
-    res_below = run_sql("SELECT term,hitlist FROM %s WHERE term>=%%s ORDER BY term ASC LIMIT %%s" % idxphraseX, (p, n_below * 3))
+    res_below = run_sql("SELECT term,hitlist FROM %s WHERE term>=%%s ORDER BY term ASC LIMIT %%s"% wash_table_column_name(idxphraseX), (p, n_below * 3))
     res_below = [(term, intbitset(hitlist) & collection) for term, hitlist in res_below]
     res_below = [(term, len(hitlist)) for term, hitlist in res_below if hitlist]
 
@@ -3433,8 +3423,7 @@ def get_nbhits_in_bibrec(term, f):
     col = 'creation_date'
     if f == 'datemodified':
         col = 'modification_date'
-    res = run_sql("SELECT COUNT(*) FROM bibrec WHERE %s LIKE %%s" % (col,),
-                  (term + '%',))
+    res = run_sql("SELECT COUNT(*) FROM bibrec WHERE %s LIKE %%s"%  wash_table_column_name(col), (term + '%',))
     return res[0][0]
 
 def get_nbhits_in_bibwords(word, f):
@@ -3449,8 +3438,7 @@ def get_nbhits_in_bibwords(word, f):
         else:
             return 0
     if word:
-        res = run_sql("SELECT hitlist FROM %s WHERE term=%%s" % bibwordsX,
-                      (word,))
+        res = run_sql("SELECT hitlist FROM %s WHERE term=%%s"%  wash_table_column_name(bibwordsX), (word,))
         for hitlist in res:
             out += len(intbitset(hitlist[0]))
     return out
@@ -3467,8 +3455,7 @@ def get_nbhits_in_idxphrases(word, f):
         else:
             return 0
     if word:
-        res = run_sql("SELECT hitlist FROM %s WHERE term=%%s" % idxphraseX,
-                      (word,))
+        res = run_sql("SELECT hitlist FROM %s WHERE term=%%s"%  wash_table_column_name(idxphraseX),(word,))
         for hitlist in res:
             out += len(intbitset(hitlist[0]))
     return out
@@ -6836,7 +6823,7 @@ def get_all_field_values(tag):
     @rtype: list of strings
     """
     table = 'bib%02dx' % int(tag[:2])
-    return [row[0] for row in run_sql("SELECT DISTINCT(value) FROM %s WHERE tag=%%s" % table, (tag, ))]
+    return [row[0] for row in run_sql("SELECT DISTINCT(value) FROM %s WHERE tag=%%s"% wash_table_column_name(table), (tag, ))]
 
 
 def get_most_popular_field_values(recids, tags, exclude_values=None, count_repetitive_values=True, split_by=0):

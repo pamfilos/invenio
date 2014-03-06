@@ -94,7 +94,7 @@ INSERT INTO sbmFUNCTIONS VALUES ('SBI','DUMMY1','Mail_Submitter',60,1);
 INSERT INTO sbmFUNCTIONS VALUES ('SBI','DUMMY1','Make_Record',30,1);
 INSERT INTO sbmFUNCTIONS VALUES ('SBI','DUMMY1','Print_Success',50,1);
 INSERT INTO sbmFUNCTIONS VALUES ('SBI','DUMMY1','Report_Number_Generation',20,1);
-INSERT INTO sbmIMPLEMENT VALUES ('DUMMY1','SBI','Y','SBIDUMMY1',1,'2008-03-06','2008-03-07',1,'','',0,0,'');
+INSERT INTO sbmIMPLEMENT VALUES ('DUMMY1','SBI','Y','SBIDUMMY1',1,'2008-03-06','2008-03-07',1,'','',0,0,'') ;
 INSERT INTO sbmPARAMETERS VALUES ('DUMMY1','authorfile','DUMMY1_AU');
 INSERT INTO sbmPARAMETERS VALUES ('DUMMY1','autorngen','Y');
 INSERT INTO sbmPARAMETERS VALUES ('DUMMY1','counterpath','lastid_DUMMY1_<PA>categ</PA>_<PA>yy</PA>');
@@ -114,7 +114,7 @@ INSERT INTO sbmPARAMETERS VALUES ('DUMMY1','sourceDoc','Textual Document');
 INSERT INTO sbmPARAMETERS VALUES ('DUMMY1','sourceTemplate','DUMMY1.tpl');
 INSERT INTO sbmPARAMETERS VALUES ('DUMMY1','status','ADDED');
 INSERT INTO sbmPARAMETERS VALUES ('DUMMY1','titleFile','DUMMY1_TITLE');
-INSERT INTO sbmPARAMETERS VALUES ('DUMMY1','yeargen','AUTO');"""
+INSERT INTO sbmPARAMETERS VALUES ('DUMMY1','yeargen','AUTO');"""    # kwalitee: disable=sql
 
     def test_load_submission(self):
         """websubmitadmin - test loading submission dump"""
@@ -184,16 +184,15 @@ INSERT INTO sbmPARAMETERS VALUES ('DUMMY1','yeargen','AUTO');"""
         insert_submission_dump(self.dummy_submission_dump_1)
         remove_submission(doctype="DUMMY1", method="NAMES")
 
-        self.assert_(len(run_sql('SELECT * FROM sbmDOCTYPE WHERE sdocname="DUMMY1"')) == 0)
-        self.assert_(len(run_sql('SELECT * FROM sbmCATEGORIES WHERE doctype="DUMMY1"')) == 0)
-        self.assert_(len(run_sql('SELECT * FROM sbmFUNCTIONS WHERE doctype="DUMMY1"')) == 0)
-        self.assert_(len(run_sql('SELECT * FROM sbmIMPLEMENT WHERE docname="DUMMY1"')) == 0)
-        self.assert_(len(run_sql('SELECT * FROM sbmPARAMETERS WHERE doctype="DUMMY1"')) == 0)
-
-        self.assert_(len(run_sql('SELECT * FROM sbmFUNDESC WHERE function LIKE "DUMMY1%"')) == 0)
-        self.assert_(len(run_sql('SELECT * FROM sbmFIELD WHERE subname LIKE "DUMMY1%"')) == 0)
-        self.assert_(len(run_sql('SELECT * FROM sbmFIELDDESC WHERE name LIKE "DUMMY1%"')) == 0)
-        self.assert_(len(run_sql('SELECT * FROM sbmALLFUNCDESCR WHERE function LIKE "DUMMY1%"')) == 0)
+        self.assert_(len(run_sql('SELECT * FROM sbmDOCTYPE WHERE sdocname="DUMMY1"')) == 0) # kwalitee: disable=sql
+        self.assert_(len(run_sql('SELECT * FROM sbmCATEGORIES WHERE doctype="DUMMY1"')) == 0)   # kwalitee: disable=sql
+        self.assert_(len(run_sql('SELECT * FROM sbmFUNCTIONS WHERE doctype="DUMMY1"')) == 0)    # kwalitee: disable=sql
+        self.assert_(len(run_sql('SELECT * FROM sbmIMPLEMENT WHERE docname="DUMMY1"')) == 0)    # kwalitee: disable=sql
+        self.assert_(len(run_sql('SELECT * FROM sbmPARAMETERS WHERE doctype="DUMMY1"')) == 0)   # kwalitee: disable=sql
+        self.assert_(len(run_sql('SELECT * FROM sbmFUNDESC WHERE function LIKE "DUMMY1%"')) == 0) # kwalitee: disable=sql
+        self.assert_(len(run_sql('SELECT * FROM sbmFIELD WHERE subname LIKE "DUMMY1%"')) == 0)  # kwalitee: disable=sql
+        self.assert_(len(run_sql('SELECT * FROM sbmFIELDDESC WHERE name LIKE "DUMMY1%"')) == 0) # kwalitee: disable=sql
+        self.assert_(len(run_sql('SELECT * FROM sbmALLFUNCDESCR WHERE function LIKE "DUMMY1%"')) == 0) # kwalitee: disable=sql
 
     def tearDown(self):
         insert_submission_dump('\n'.join([line for line in self.dummy_submission_dump_1.splitlines() if line.startswith('DELETE')]))

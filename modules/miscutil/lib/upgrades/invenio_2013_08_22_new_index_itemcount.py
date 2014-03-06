@@ -74,8 +74,8 @@ def do_upgrade_atlantis():
                  PRIMARY KEY (id_bibrec,type)
                ) ENGINE=MyISAM;""")
     #second step: fill in idxINDEX, idxINDEX_field, field tables
-    run_sql("""INSERT INTO field VALUES (37,'item count','itemcount')""")
-    run_sql("""INSERT INTO idxINDEX VALUES (24,'itemcount','This index contains number of copies of items in the library.','0000-00-00 00:00:00', '', 'native', '','No','No','No', 'BibIndexItemCountTokenizer')""")
+    run_sql("""INSERT INTO field VALUES (37,'item count','itemcount')""")   # kwalitee: disable=sql
+    run_sql("""INSERT INTO idxINDEX VALUES (24,'itemcount','This index contains number of copies of items in the library.','0000-00-00 00:00:00', '', 'native', '','No','No','No', 'BibIndexItemCountTokenizer')""")   # kwalitee: disable=sql
     run_sql("""INSERT INTO idxINDEX_field (id_idxINDEX, id_field) VALUES (24,37)""")
 
 

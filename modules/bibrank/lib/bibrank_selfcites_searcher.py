@@ -30,9 +30,9 @@ def get_self_cited_by(recid):
 
 def get_self_cited_by_list(recids):
     in_sql = ','.join('%s' for dummy in recids)
-    sql = "SELECT citee, citer FROM rnkSELFCITEDICT WHERE citee IN (%s)"
+    sql = "SELECT citee, citer FROM rnkSELFCITEDICT WHERE citee IN (%s)"% in_sql
     cites = {}
-    for citee, citer in run_sql(sql % in_sql, recids):
+    for citee, citer in run_sql(sql, tuple(recids)):  # kwalitee: disable=sql
         cites.setdefault(citee, set()).add(citer)
     return [(recid, cites.get(recid, set())) for recid in recids]
 
@@ -44,8 +44,8 @@ def get_self_refers_to(recid):
 
 def get_self_refers_to_list(recids):
     in_sql = ','.join('%s' for dummy in recids)
-    sql = "SELECT citer, citee FROM rnkSELFCITEDICT WHERE citer IN (%s)"
+    sql = "SELECT citer, citee FROM rnkSELFCITEDICT WHERE citer IN (%s)" % in_sql
     refs = {}
-    for citer, citee in run_sql(sql % in_sql, recids):
+    for citer, citee in run_sql(sql, tuple(recids)):  # kwalitee: disable=sql
         refs.setdefault(citer, set()).add(citee)
     return [(recid, refs.get(recid, set())) for recid in recids]

@@ -73,7 +73,7 @@ import tempfile
 from MySQLdb.converters import conversions
 from MySQLdb import escape, escape_string
 from invenio.config import CFG_PREFIX, CFG_TMPDIR
-from invenio.dbquery import run_sql
+from invenio.dbquery import run_sql, real_escape_string
 from invenio.shellutils import run_shell_command
 
 CFG_WEBSUBMIT_DUMPER_DEFAULT_METHOD = "NAMES"
@@ -130,29 +130,29 @@ DELETE FROM sbmPARAMETERS WHERE doctype='%(doctype)s';
 """ % {'doctype': escape_string(doctype)}
 
     dump_output = ''
-    res = run_sql('SELECT * FROM sbmDOCTYPE WHERE sdocname=%s', (doctype,), with_desc=1)
+    res = run_sql('SELECT * FROM sbmDOCTYPE WHERE sdocname=%s', (real_escape_string(doctype),), with_desc=1)    # kwalitee: disable=sql
     dump_output += build_table_dump('sbmDOCTYPE', res, ignore_duplicate_insert)
-    res = run_sql('SELECT * FROM sbmCATEGORIES WHERE doctype=%s', (doctype,), with_desc=1)
+    res = run_sql('SELECT * FROM sbmCATEGORIES WHERE doctype=%s', (real_escape_string(doctype),), with_desc=1)  # kwalitee: disable=sql
     dump_output += build_table_dump('sbmCATEGORIES', res, ignore_duplicate_insert)
-#    res = run_sql("SELECT * FROM sbmFIELD WHERE subname like '%%%s'" % (escape_string(doctype),), with_desc=1)
+#    res = run_sql("SELECT * FROM sbmFIELD WHERE subname like '%%%s'" % (escape_string(doctype),), with_desc=1)    # kwalitee: disable=sql
 #    dump_output += build_table_dump('sbmFIELD', res)
-#    res = run_sql("SELECT * FROM sbmFIELDDESC WHERE  name like '%s%%'" % (escape_string(doctype),), with_desc=1)
+#    res = run_sql("SELECT * FROM sbmFIELDDESC WHERE  name like '%s%%'" % (escape_string(doctype),), with_desc=1)    # kwalitee: disable=sql
 #    dump_output += build_table_dump('sbmFIELDDESC', res)
-    res = run_sql('SELECT * FROM sbmFUNCTIONS WHERE doctype=%s', (doctype,), with_desc=1)
+    res = run_sql('SELECT * FROM sbmFUNCTIONS WHERE doctype=%s', (real_escape_string(doctype),), with_desc=1)    # kwalitee: disable=sql
     dump_output += build_table_dump('sbmFUNCTIONS', res, ignore_duplicate_insert)
-    res = run_sql('SELECT * FROM sbmIMPLEMENT WHERE docname=%s', (doctype,), with_desc=1)
+    res = run_sql('SELECT * FROM sbmIMPLEMENT WHERE docname=%s', (real_escape_string(doctype),), with_desc=1) # kwalitee: disable=sql
     dump_output += build_table_dump('sbmIMPLEMENT', res, ignore_duplicate_insert)
-    res = run_sql('SELECT * FROM sbmPARAMETERS WHERE doctype=%s', (doctype,), with_desc=1)
+    res = run_sql('SELECT * FROM sbmPARAMETERS WHERE doctype=%s', (real_escape_string(doctype),), with_desc=1)    # kwalitee: disable=sql
     dump_output += build_table_dump('sbmPARAMETERS', res, ignore_duplicate_insert)
 
     if method == "NAMES":
-        res = run_sql("SELECT * FROM sbmALLFUNCDESCR WHERE function LIKE '%s%%'" % (escape_string(doctype),), with_desc=1)
+        res = run_sql("SELECT * FROM sbmALLFUNCDESCR WHERE function LIKE '%s%%'" % (real_escape_string(doctype),), with_desc=1)    # kwalitee: disable=sql
         dump_output += build_table_dump('sbmALLFUNCDESCR', res, ignore_duplicate_insert)
-        res = run_sql("SELECT * FROM sbmFUNDESC WHERE function LIKE '%s%%'" % (escape_string(doctype),), with_desc=1)
+        res = run_sql("SELECT * FROM sbmFUNDESC WHERE function LIKE '%s%%'" % (real_escape_string(doctype),), with_desc=1) # kwalitee: disable=sql
         dump_output += build_table_dump('sbmFUNDESC', res, ignore_duplicate_insert)
-        res = run_sql("SELECT * FROM sbmFIELD WHERE subname LIKE '%%%s'" % (escape_string(doctype),), with_desc=1)
+        res = run_sql("SELECT * FROM sbmFIELD WHERE subname LIKE '%%%s'" % (real_escape_string(doctype),), with_desc=1)    # kwalitee: disable=sql
         dump_output += build_table_dump('sbmFIELD', res, ignore_duplicate_insert)
-        res = run_sql("SELECT * FROM sbmFIELDDESC WHERE name LIKE '%s%%'" % (escape_string(doctype),), with_desc=1)
+        res = run_sql("SELECT * FROM sbmFIELDDESC WHERE name LIKE '%s%%'" % (real_escape_string(doctype),), with_desc=1)    # kwalitee: disable=sql
         dump_output += build_table_dump('sbmFIELDDESC', res, ignore_duplicate_insert)
     elif method == "RELATIONS":
         res = run_sql("SELECT DISTINCT sbmALLFUNCDESCR.* FROM sbmALLFUNCDESCR, sbmFUNCTIONS WHERE sbmALLFUNCDESCR.function=sbmFUNCTIONS.function and sbmFUNCTIONS.doctype=%s",  \
@@ -182,10 +182,10 @@ def remove_submission(doctype, method=CFG_WEBSUBMIT_DUMPER_DEFAULT_METHOD):
     "Remove submission from database"
     # NOT TESTED
     if method == "NAMES":
-        run_sql("DELETE FROM sbmFUNDESC WHERE function LIKE '%s%%'" % (doctype,))
-        run_sql("DELETE FROM sbmFIELD WHERE subname LIKE '%%%s'" % (doctype,))
-        run_sql("DELETE FROM sbmFIELDDESC WHERE  name LIKE '%s%%'" % (doctype,))
-        run_sql("DELETE FROM sbmALLFUNCDESCR WHERE function LIKE '%s%%'" % (doctype,))
+        run_sql("DELETE FROM sbmFUNDESC WHERE function LIKE '%s%%'" % (real_escape_string(doctype),)) # kwalitee: disable=sql
+        run_sql("DELETE FROM sbmFIELD WHERE subname LIKE '%%%s'" %  (real_escape_string(doctype),)) # kwalitee: disable=sql
+        run_sql("DELETE FROM sbmFIELDDESC WHERE  name LIKE '%s%%'" % (real_escape_string(doctype),)) # kwalitee: disable=sql
+        run_sql("DELETE FROM sbmALLFUNCDESCR WHERE function LIKE '%s%%'" % (real_escape_string(doctype),)) # kwalitee: disable=sql
     elif method == "RELATIONS":
         run_sql("DELETE sbmALLFUNCDESCR.* FROM sbmALLFUNCDESCR, sbmFUNCTIONS WHERE sbmALLFUNCDESCR.function=sbmFUNCTIONS.function and sbmFUNCTIONS.doctype=%s", (doctype,))
         run_sql("DELETE sbmFUNDESC.* FROM sbmFUNDESC, sbmFUNCTIONS WHERE sbmFUNDESC.function=sbmFUNCTIONS.function and sbmFUNCTIONS.doctype=%s", (doctype,))
@@ -251,40 +251,40 @@ def diff_submission(submission1_dump, submission2_dump, verbose=2,
     "Output diff between submissions"
 
     def clean_line(line, ignore_dates, ignore_positions, ignore_pages):
-        "Clean one line of the submission"
+        "clean one line of the submission"
         updated_line = line
         if ignore_dates:
-            if line.startswith('INSERT INTO sbmFIELD VALUES'):
+            if line.startswith('insert into sbmfield values'):  # kwalitee: disable=sql
                 args = updated_line.split(",")
                 args[-3] = ''
                 args[-4] = ''
-                updated_line = ','.join(args)
-            elif line.startswith('INSERT INTO sbmFIELDDESC VALUES'):
+                updated_line = ','.join(real_escape_string(args))
+            elif line.startswith('insert into sbmfielddesc values'):    # kwalitee: disable=sql
                 args = updated_line.split(",")
                 args[-4] = ''
                 args[-5] = ''
-                updated_line = ','.join(args)
-            elif line.startswith('INSERT INTO sbmIMPLEMENT VALUES '):
+                updated_line = ','.join(real_escape_string(args))
+            elif line.startswith('insert into sbmimplement values '):   # kwalitee: disable=sql
                 args = updated_line.split(",")
                 args[-6] = ''
                 args[-7] = ''
-                updated_line = ','.join(args)
+                updated_line = ','.join(real_escape_string(args))
 
         if ignore_positions:
-            if line.startswith('INSERT INTO sbmFIELD VALUES'):
+            if line.startswith('INSERT INTO sbmFIELD VALUES'):  # kwalitee: disable=sql
                 args = updated_line.split(",")
                 args[2] = ''
-                updated_line = ','.join(args)
+                updated_line = ','.join(real_escape_string(args))
 
         if ignore_pages:
-            if line.startswith('INSERT INTO sbmFIELD VALUES'):
+            if line.startswith('INSERT INTO sbmFIELD VALUES'):  # kwalitee: disable=sql
                 args = updated_line.split(",")
                 args[1] = ''
-                updated_line = ','.join(args)
-            if line.startswith('INSERT INTO sbmIMPLEMENT VALUES '):
+                updated_line = ','.join(real_escape_string(args))
+            if line.startswith('INSERT INTO sbmIMPLEMENT VALUES '): # kwalitee: disable=sql
                 args = updated_line.split(",")
                 args[4] = ''
-                updated_line = ','.join(args)
+                updated_line = ','.join(real_escape_string(args))
 
         return updated_line
 

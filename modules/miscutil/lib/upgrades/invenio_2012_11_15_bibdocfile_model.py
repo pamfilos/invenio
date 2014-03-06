@@ -117,9 +117,9 @@ def _backup_tables(logger):
     run_sql('DROP TABLE IF EXISTS bibdoc_bibdoc_backup_newdatamodel')
 
     try:
-        run_sql("""CREATE TABLE bibrec_bibdoc_backup_newdatamodel SELECT * FROM bibrec_bibdoc""")
-        run_sql("""CREATE TABLE bibdoc_backup_newdatamodel SELECT * FROM bibdoc""")
-        run_sql("""CREATE TABLE bibdoc_bibdoc_backup_newdatamodel SELECT * FROM bibdoc_bibdoc""")
+        run_sql("""CREATE TABLE bibrec_bibdoc_backup_newdatamodel SELECT * FROM bibrec_bibdoc""")   # kwalitee: disable=sql
+        run_sql("""CREATE TABLE bibdoc_backup_newdatamodel SELECT * FROM bibdoc""")   # kwalitee: disable=sql
+        run_sql("""CREATE TABLE bibdoc_bibdoc_backup_newdatamodel SELECT * FROM bibdoc_bibdoc""")   # kwalitee: disable=sql
     except OperationalError, e:
         logger.info("Problem when backing up tables")
         raise
@@ -150,8 +150,8 @@ def _fix_recid(recid, logger):
             logger.error("Error when migrating document %s attached to the record %s: can not retrieve from the bibdoc table " % (docid, recid))
         else:
             docname = str(res2[0][0])
-            run_sql("update bibrec_bibdoc set docname=%%s where id_bibrec=%s and id_bibdoc=%s" % (str(recid), docid), (docname, ))
-            run_sql("update bibdoc set doctype=%%s where id=%s" % (docid,), (doctype, ))
+            run_sql("update bibrec_bibdoc set docname=%%s where id_bibrec=%s and id_bibdoc=%s" , (str(recid), docid), (docname, ))
+            run_sql("update bibdoc set doctype=%%s where id=%s" , (docid,), (real_escape_string(doctype), ))
 
         # 2) moving moreinfo to the new moreinfo structures (default namespace)
         if res2[0][1]:

@@ -25,11 +25,11 @@ def info():
     return "New 'directRelationshipMARC', 'reverseRelationshipMARC' and 'bibuploadMode', parameters for Link_Records WebSubmit function"
 
 def do_upgrade():
-    run_sql("""INSERT INTO sbmFUNDESC VALUES ('Link_Records','directRelationshipMARC')""")
-    run_sql("""INSERT INTO sbmFUNDESC VALUES ('Link_Records','reverseRelationshipMARC')""")
-    run_sql("""INSERT INTO sbmFUNDESC VALUES ('Link_Records','bibuploadMode')""")
-    run_sql("""INSERT INTO sbmFUNDESC VALUES ('Link_Records','silentFailures')""")
-    run_sql("""INSERT INTO sbmFUNDESC VALUES ('Link_Records','considerEmpty')""")
+    run_sql("""INSERT INTO sbmFUNDESC VALUES ('Link_Records','directRelationshipMARC')""") # kwalitee: disable=sql
+    run_sql("""INSERT INTO sbmFUNDESC VALUES ('Link_Records','reverseRelationshipMARC')""") # kwalitee: disable=sql
+    run_sql("""INSERT INTO sbmFUNDESC VALUES ('Link_Records','bibuploadMode')""") # kwalitee: disable=sql
+    run_sql("""INSERT INTO sbmFUNDESC VALUES ('Link_Records','silentFailures')""") # kwalitee: disable=sql
+    run_sql("""INSERT INTO sbmFUNDESC VALUES ('Link_Records','considerEmpty')""") # kwalitee: disable=sql
 
 def estimate():
     """  Estimate running time of upgrade in seconds (optional). """

@@ -91,7 +91,7 @@ def create_download_history_graph_and_box(id_bibrec, ln=CFG_SITE_LANG):
         html_content = ""
         remove_old_img("download")
         #Users analysis graph
-        ips = database_tuples_to_single_list(run_sql("select client_host from rnkDOWNLOADS where id_bibrec=%s;" % id_bibrec))
+        ips = database_tuples_to_single_list(run_sql("select client_host from rnkDOWNLOADS where id_bibrec=%s;" , (id_bibrec,)))
         if ips:
             users_analysis_results = create_users_analysis_graph(id_bibrec, ips)
             if users_analysis_results[0]:
@@ -123,7 +123,7 @@ def draw_downloads_statistics(id_bibrec, id_bibdoc_list):
     docfile_name_list = []
     #used to name the uniquecurve when len(id_bibdoc_list)=0 or > cfg_id_bibdoc_id_bibrec
     record_name = ""
-    record_name_query = run_sql("select value from bibrec_bib24x,bib24x where id_bibrec=%s and id_bibxxx=id;" % id_bibrec)
+    record_name_query = run_sql("select value from bibrec_bib24x,bib24x where id_bibrec=%s and id_bibxxx=id;", (id_bibrec,))
     if record_name_query:
         record_name = record_name_query[0][0]
     #list of lists of tuples: [[("09/2004",4),..],[(..,..)]..]
@@ -138,9 +138,9 @@ def draw_downloads_statistics(id_bibrec, id_bibdoc_list):
     local_month = local_time.tm_mon
     local_year = local_time.tm_year
 
-    creation_date_res = run_sql("""SELECT DATE_FORMAT(creation_date,"%%Y-%%m") FROM bibrec WHERE id=%s;""" % id_bibrec)
+    creation_date_res = run_sql("""SELECT DATE_FORMAT(creation_date,"%%Y-%%m") FROM bibrec WHERE id=%s;""" , (id_bibrec,))
     if creation_date_res == ():
-        creation_date_res = run_sql("""SELECT DATE_FORMAT(MIN(download_time),"%%Y-%%m") FROM rnkDOWNLOADS where id_bibrec=%s;""" % id_bibrec)
+        creation_date_res = run_sql("""SELECT DATE_FORMAT(MIN(download_time),"%%Y-%%m") FROM rnkDOWNLOADS where id_bibrec=%s;""" , (id_bibrec,))
     if creation_date_res == (('0000-00',),):
         creation_date_year = local_year - 1
         creation_date_month = local_month
@@ -162,7 +162,7 @@ def draw_downloads_statistics(id_bibrec, id_bibdoc_list):
         for i in range(len(id_bibdoc_list)):
             datas = create_list_tuple_data(intervals, id_bibrec, id_bibdoc_query_addition="and id_bibdoc=%s" % id_bibdoc_list[i])
             coordinates_list.append(datas)
-            docname = run_sql("select docname from bibrec_bibdoc where id_bibdoc=%s and id_bibrec=%s;" % (id_bibdoc_list[i], id_bibrec))
+            docname = run_sql("select docname from bibrec_bibdoc where id_bibdoc=%s and id_bibrec=%s;" , (id_bibdoc_list[i], id_bibrec))
             docfile_name_list.append(docname[0][0])
         #In case of multiple id_bibdocs datas_max will be used to draw a line which is the total of the others lines
         if not (len(intervals)==1 or len(id_bibdoc_list)==1):

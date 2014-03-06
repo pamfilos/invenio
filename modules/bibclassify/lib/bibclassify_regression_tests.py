@@ -106,7 +106,7 @@ class BibClassifyRegressionTest(BibClassifyTestCase):
         if not bconfig.STANDALONE:
             bibtask = bibclassify_daemon.bibtask
             #first test if the record exists in the database
-            record = dbquery.run_sql("SELECT * FROM bibrec WHERE id=94")
+            record = dbquery.run_sql("SELECT * FROM bibrec WHERE id=94")    # kwalitee: disable=sql
 
             if len(record):
 

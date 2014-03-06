@@ -28,7 +28,7 @@ from invenio.config import \
      CFG_SITE_LANG, \
      CFG_ETCDIR
 from invenio.search_engine import perform_request_search, wash_index_term
-from invenio.dbquery import run_sql, DatabaseError, serialize_via_marshal, deserialize_via_marshal
+from invenio.dbquery import run_sql, DatabaseError, serialize_via_marshal, deserialize_via_marshal, wash_table_column_name
 from invenio.bibindex_engine_stemmer import is_stemmer_available_for_language, stem
 from invenio.bibindex_engine_stopwords import is_stopword
 from invenio.bibindex_engine import beautify_range_list, \
@@ -277,7 +277,7 @@ class WordTable:
             else:
                 # yes there were some new words:
                 write_message("......... updating hitlist for ``%s''" % word, verbose=9)
-                run_sql("UPDATE %s SET hitlist=%%s WHERE term=%%s" % self.tablename,
+                run_sql("UPDATE %s SET hitlist=%%s WHERE term=%%s" % wash_table_column_name(self.tablename), # kwalitee: disable=sql
                         (serialize_via_marshal(set), word))
         else: # the word is new, will create new set:
             write_message("......... inserting hitlist for ``%s''" % word, verbose=9)
@@ -286,14 +286,13 @@ class WordTable:
                 #new word, add to list
                 options["modified_words"][word] = 1
                 try:
-                    run_sql("INSERT INTO %s (term, hitlist) VALUES (%%s, %%s)" % self.tablename,
+                    run_sql("INSERT INTO %s (term, hitlist) VALUES (%%s, %%s)"% (wash_table_column_name(self.tablename),),
                             (word, serialize_via_marshal(set)))
                 except Exception, e:
                     ## FIXME: This is for debugging encoding errors
                     register_exception(prefix="Error when putting the term '%s' into db (hitlist=%s): %s\n" % (repr(word), set, e), alert_admin=True)
         if not set: # never store empty words
-            run_sql("DELETE from %s WHERE term=%%s" % self.tablename,
-                    (word,))
+            run_sql("DELETE from %s WHERE term=%%s" % wash_table_column_name(self.tablename),(word,)) # kwalitee: disable=sql
 
         del self.value[word]
 
@@ -469,12 +468,11 @@ class WordTable:
 
         # put words into reverse index table with FUTURE status:
         for recID in recIDs:
-            run_sql("INSERT INTO %sR (id_bibrec,termlist,type) VALUES (%%s,%%s,'FUTURE')" % self.tablename[:-1],
+            run_sql("INSERT INTO %sR (id_bibrec,termlist,type) VALUES (%%s,%%s,'FUTURE')"% (wash_table_column_name(self.tablename[:-1]),),
                     (recID, serialize_via_marshal(wlist[recID])))
             # ... and, for new records, enter the CURRENT status as empty:
             try:
-                run_sql("INSERT INTO %sR (id_bibrec,termlist,type) VALUES (%%s,%%s,'CURRENT')" % self.tablename[:-1],
-                        (recID, serialize_via_marshal([])))
+                run_sql("INSERT INTO %sR (id_bibrec,termlist,type) VALUES (%%s,%%s,'CURRENT')"% (wash_table_column_name(self.tablename[:-1]),), (recID, serialize_via_marshal([])))
             except DatabaseError:
                 # okay, it's an already existing record, no problem
                 pass
@@ -848,7 +846,7 @@ def get_valid_range(rank_method_code):
 
     #if options["verbose"] >=9:
     #    write_message("Getting records from collections enabled for rank method.")
-    #res = run_sql("SELECT collection.name FROM collection,collection_rnkMETHOD,rnkMETHOD WHERE collection.id=id_collection and id_rnkMETHOD=rnkMETHOD.id and rnkMETHOD.name='%s'" %  rank_method_code)
+    #res = run_sql("SELECT collection.name FROM collection,collection_rnkMETHOD,rnkMETHOD WHERE collection.id=id_collection and # kwalitee: disable=sql id_rnkMETHOD=rnkMETHOD.id and rnkMETHOD.name='%s'" %  rank_method_code)  # kwalitee: disable=sql
     #l_of_colls = []
     #for coll in res:
     #    l_of_colls.append(coll[0])
@@ -884,8 +882,8 @@ def check_rnkWORD(table):
     """Checks for any problems in rnkWORD tables."""
     i = 0
     errors = {}
-    termslist = run_sql("SELECT term FROM %s" % table)
-    N = run_sql("select max(id_bibrec) from %sR" % table[:-1])[0][0]
+    termslist = run_sql("SELECT term FROM %s"% (wash_table_column_name(table),))
+    N = run_sql("select max(id_bibrec) from %s"% ("%sR" % wash_table_column_name(table[:-1]),))[0][0] # kwalitee: disable=sql
     write_message("Checking integrity of rank values in %s" % table)
     terms = map(lambda x: x[0], termslist)
 
@@ -893,8 +891,7 @@ def check_rnkWORD(table):
         query_params = ()
         for j in range(i, ((i+5000)< len(terms) and (i+5000) or len(terms))):
             query_params += (terms[j],)
-        terms_docs = run_sql("SELECT term, hitlist FROM %s WHERE term IN (%s)" % (table, (len(query_params)*"%s,")[:-1]),
-                             query_params)
+        terms_docs = run_sql("SELECT term, hitlist FROM %s WHERE term IN (%s)" % (wash_table_column_name(table), (len(query_params)*"%s,")[:-1]), query_params) # kwalitee: disable=sql
         for (t, hitlist) in terms_docs:
             term_docs = deserialize_via_marshal(hitlist)
             if (term_docs.has_key("Gi") and term_docs["Gi"][1] == 0) or not term_docs.has_key("Gi"):
@@ -904,14 +901,16 @@ def check_rnkWORD(table):
     write_message("Checking integrity of rank values in %sR" % table[:-1])
     i = 0
     while i < N:
-        docs_terms = run_sql("SELECT id_bibrec, termlist FROM %sR WHERE id_bibrec>=%s and id_bibrec<=%s" % (table[:-1], i, i+5000))
+        query = "SELECT id_bibrec, termlist FROM %sR WHERE id_bibrec>=%%s and id_bibrec<=%%s"% wash_table_column_name(table[:-1])
+        docs_terms = run_sql(query , (i, i+5000))
         for (j, termlist) in docs_terms:
             termlist = deserialize_via_marshal(termlist)
             for (t, tf) in termlist.iteritems():
                 if tf[1] == 0 and not errors.has_key(t):
                     errors[t] = 1
                     write_message("ERROR: Gi missing for record %s and term: %s (%s) in %s" % (j,t,repr(t), table))
-                    terms_docs = run_sql("SELECT term, hitlist FROM %s WHERE term=%%s" % table, (t,))
+                    query = "SELECT term, hitlist FROM %s WHERE term=%%s"% wash_table_column_name(table)
+                    terms_docs = run_sql(query, (t,))
                     termlist = deserialize_via_marshal(terms_docs[0][1])
             i += 5000
 
@@ -923,8 +922,7 @@ def check_rnkWORD(table):
 
 def rank_method_code_statistics(table):
     """Shows some statistics about this rank method."""
-
-    maxID = run_sql("select max(id) from %s" % table)
+    maxID = run_sql("select max(id) from %s"% (wash_table_column_name(table),))
     maxID = maxID[0][0]
     terms = {}
     Gi = {}
@@ -934,7 +932,7 @@ def rank_method_code_statistics(table):
     write_message("Least used terms---Most important terms---Least important terms")
     i = 0
     while i < maxID:
-        terms_docs=run_sql("SELECT term, hitlist FROM %s WHERE id>= %s and id < %s" % (table, i, i + 10000))
+        terms_docs=run_sql("SELECT term, hitlist FROM %s WHERE id>= %%s and id < %%s"% (wash_table_column_name(table),),( i, i + 10000))
         for (t, hitlist) in terms_docs:
             term_docs=deserialize_via_marshal(hitlist)
             terms[len(term_docs)] = terms.get(len(term_docs), 0) + 1
@@ -956,7 +954,7 @@ def update_rnkWORD(table, terms):
     stime = time.time()
     Gi = {}
     Nj = {}
-    N = run_sql("select count(id_bibrec) from %sR" % table[:-1])[0][0]
+    N = run_sql("select count(id_bibrec) from %sR"% (wash_table_column_name(table[:-1]),))[0][0]
 
     if len(terms) == 0 and task_get_option("quick") == "yes":
         write_message("No terms to process, ending...")
@@ -998,7 +996,7 @@ def update_rnkWORD(table, terms):
         write_message("Phase 2: Finished finding all terms in affected records")
 
     else: #recalculate
-        max_id = run_sql("SELECT MAX(id) FROM %s" % table)
+        max_id = run_sql("SELECT MAX(id) FROM %s" % (wash_table_column_name(table),)) # kwalitee: disable=sql
         max_id = max_id[0][0]
         write_message("Beginning recalculation of %s terms" % max_id)
 
@@ -1086,7 +1084,7 @@ def update_rnkWORD(table, terms):
                 Nj[j] = int(Nj[j] * 100)
                 if Nj[j] >= 0:
                     Nj[j] += 1
-                run_sql("UPDATE %sR SET termlist=%%s WHERE id_bibrec=%%s" % table[:-1],
+                run_sql("UPDATE %sR SET termlist=%%s WHERE id_bibrec=%%s"% wash_table_column_name(table[:-1]),
                         (serialize_via_marshal(doc_terms), j))
             except (ZeroDivisionError, OverflowError), e:
                 ## This is to try to isolate division by zero errors.
@@ -1112,7 +1110,7 @@ def update_rnkWORD(table, terms):
                 if Git >= 0:
                     Git += 1
                 term_docs["Gi"] = (0, Git)
-                run_sql("UPDATE %s SET hitlist=%%s WHERE term=%%s" % table,
+                run_sql("UPDATE %s SET hitlist=%%s WHERE term=%%s"% wash_table_column_name(table),
                         (serialize_via_marshal(term_docs), t))
             except (ZeroDivisionError, OverflowError), e:
                 register_exception(prefix="Error when analysing the term %s (%s): %s\n" % (t, repr(terms_docs), e), alert_admin=True)
@@ -1126,18 +1124,18 @@ def update_rnkWORD(table, terms):
 def get_from_forward_index(terms, start, stop, table):
     terms_docs = ()
     for j in range(start, (stop < len(terms) and stop or len(terms))):
-        terms_docs += run_sql("SELECT term, hitlist FROM %s WHERE term=%%s" % table,
+        terms_docs += run_sql("SELECT term, hitlist FROM %s WHERE term=%%s"% wash_table_column_name(table),
                               (terms[j],))
     return terms_docs
 
 def get_from_forward_index_with_id(start, stop, table):
-    terms_docs = run_sql("SELECT term, hitlist FROM %s WHERE id BETWEEN %s AND %s" % (table, start, stop))
+    terms_docs = run_sql("SELECT term, hitlist FROM %s WHERE id BETWEEN %%s AND %%s"% wash_table_column_name(table),(start, stop))
     return terms_docs
 
 def get_from_reverse_index(records, start, stop, table):
     current_recs = "%s" % records[start:stop]
     current_recs = current_recs[1:-1]
-    docs_terms = run_sql("SELECT id_bibrec, termlist FROM %sR WHERE id_bibrec IN (%s)" % (table[:-1], current_recs))
+    docs_terms = run_sql("SELECT id_bibrec, termlist FROM %sR WHERE id_bibrec IN (%%s)"% wash_table_column_name(table[:-1]),(current_recs,))
     return docs_terms
 
 #def test_word_separators(phrase="hep-th/0101001"):
@@ -1154,12 +1152,12 @@ def getName(methname, ln=CFG_SITE_LANG, type='ln'):
     type - which name "type" to get."""
 
     try:
-        rnkid = run_sql("SELECT id FROM rnkMETHOD where name='%s'" % methname)
+        rnkid = run_sql("SELECT id FROM rnkMETHOD where name=%s", (methname,))    # kwalitee: disable=sql
         if rnkid:
             rnkid = str(rnkid[0][0])
-            res = run_sql("SELECT value FROM rnkMETHODNAME where type='%s' and ln='%s' and id_rnkMETHOD=%s" % (type, ln, rnkid))
+            res = run_sql("SELECT value FROM rnkMETHODNAME where type=%s and ln=%s and id_rnkMETHOD=%s" , (type, ln, rnkid))    # kwalitee: disable=sql
             if not res:
-                res = run_sql("SELECT value FROM rnkMETHODNAME WHERE ln='%s' and id_rnkMETHOD=%s and type='%s'"  % (CFG_SITE_LANG, rnkid, type))
+                res = run_sql("SELECT value FROM rnkMETHODNAME WHERE ln=%s and id_rnkMETHOD=%s and type=%s", (CFG_SITE_LANG, rnkid, type))    # kwalitee: disable=sql
             if not res:
                 return methname
             return res[0][0]

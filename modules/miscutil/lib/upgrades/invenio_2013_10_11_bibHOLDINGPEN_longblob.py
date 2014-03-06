@@ -30,12 +30,12 @@ def do_upgrade():
     create_statement = run_sql('SHOW CREATE TABLE bibHOLDINGPEN')[0][1]
     if '`changeset_xml` longblob' not in create_statement:
         # First do a backup of the table
-        run_sql("""CREATE TABLE IF NOT EXISTS bibHOLDINGPEN_backup SELECT * FROM bibHOLDINGPEN""")
+        run_sql("""CREATE TABLE IF NOT EXISTS bibHOLDINGPEN_backup SELECT * FROM bibHOLDINGPEN""")   # kwalitee: disable=sql
         # And alter it
         run_sql("ALTER TABLE bibHOLDINGPEN CHANGE changeset_xml changeset_xml longblob NOT NULL")
 
         # Compress all the record xml content
-        for row in run_sql("""SELECT * FROM bibHOLDINGPEN"""):
+        for row in run_sql("""SELECT * FROM bibHOLDINGPEN"""):   # kwalitee: disable=sql
             try:
                 record_xml = row[2]
                 zlib.decompress(record_xml)
@@ -66,7 +66,7 @@ def pre_upgrade():
             raise RuntimeError("Upgrade aborted by user.")
 
         for r in res:
-            run_sql("""DELETE FROM bibHOLDINGPEN WHERE changeset_id=%s""" % r[0])
+            run_sql("""DELETE FROM bibHOLDINGPEN WHERE changeset_id=%s""", (r[0],))   # kwalitee: disable=sql
 
 def post_upgrade():
     pass

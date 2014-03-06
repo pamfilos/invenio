@@ -1405,8 +1405,8 @@ class WebInterfaceYourAccountPages(WebInterfaceDirectory):
 
         # Save request token into database since it will be used in
         # authentication
-        query = """INSERT INTO oauth1_storage VALUES(%s, %s, NOW())"""
-        params = (request_token, request_token_secret)
+        query = """INSERT INTO oauth1_storage VALUES(%s, %s, NOW())"""  # kwalitee: disable=sql
+        params = (real_escape_string(request_token), real_escape_string(request_token_secret))
         run_sql(query, params)
 
         redirect_to_url(req, authorize_url)
