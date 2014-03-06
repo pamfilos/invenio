@@ -61,7 +61,7 @@ from invenio.bibrecord import record_get_field_value
 from invenio.bibsort_engine import get_max_recid
 from invenio.bibtask import task_log_path
 
-from invenio.dbquery import get_table_update_time
+from invenio.dbquery import get_table_update_time, real_escape_string
 from invenio.search_engine import get_index_stemming_language as gis
 
 def reindex_for_type_with_bibsched(index_name, force_all=False, *other_options):
@@ -950,7 +950,7 @@ def create_index_tables(index_id):
 
 def drop_index_tables(index_id):
     query_drop = """DROP TABLE IF EXISTS idxWORD%02d%s"""
-    run_sql(query_drop % (wash_tbale_column_name(index_id), "F")) # kwalitee: disable=sql
+    run_sql(query_drop % (wash_table_column_name(index_id), "F")) # kwalitee: disable=sql
     run_sql(query_drop % (wash_table_column_name(index_id), "R")) # kwalitee: disable=sql
     run_sql(query_drop % (wash_table_column_name(index_id), "Q")) # kwalitee: disable=sql
 
