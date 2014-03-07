@@ -943,23 +943,23 @@ def create_index_tables(index_id):
                         INDEX (runtime)
                      ) ENGINE=MyISAM;"""
 
-    run_sql(query_create % wash_table_column_name(index_id)) # kwalitee: disable=sql
-    run_sql(query_create_r % wash_table_column_name(index_id)) # kwalitee: disable=sql
-    run_sql(query_create_q % wash_table_column_name(index_id)) # kwalitee: disable=sql
+    run_sql(query_create % index_id) # kwalitee: disable=sql
+    run_sql(query_create_r % index_id) # kwalitee: disable=sql
+    run_sql(query_create_q % index_id) # kwalitee: disable=sql
 
 
 def drop_index_tables(index_id):
     query_drop = """DROP TABLE IF EXISTS idxWORD%02d%s"""
-    run_sql(query_drop % (wash_table_column_name(index_id), "F")) # kwalitee: disable=sql
-    run_sql(query_drop % (wash_table_column_name(index_id), "R")) # kwalitee: disable=sql
-    run_sql(query_drop % (wash_table_column_name(index_id), "Q")) # kwalitee: disable=sql
+    run_sql(query_drop % (int(index_id), "F")) # kwalitee: disable=sql
+    run_sql(query_drop % (int(index_id), "R")) # kwalitee: disable=sql
+    run_sql(query_drop % (int(index_id), "Q")) # kwalitee: disable=sql
 
 
 def create_virtual_index(index_id, dependent_indexes):
     """creates new virtual index and binds it to specific dependent indexes"""
     index_name = 'testindex'
     query = """INSERT INTO idxINDEX (id, name, tokenizer) VALUES (%s, '%s', 'BibIndexDefaultTokenizer')"""
-    run_sql(query % (real_escape_string(index_id), index_name)) # kwalitee: disable=sql
+    run_sql(query % (int(index_id), index_name)) # kwalitee: disable=sql
     query = """INSERT INTO idxINDEX_idxINDEX VALUES (%s, %s)""" # kwalitee: disable=sql
     for index in dependent_indexes:
         run_sql(query, (index_id, get_index_id_from_index_name(index)))
